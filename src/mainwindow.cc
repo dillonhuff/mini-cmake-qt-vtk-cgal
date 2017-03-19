@@ -7,6 +7,7 @@
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
 
+#include "geometry/vtk_utils.h"
 #include "system/parse_stl.h"
 
 #include "mainwindow.h"
@@ -25,14 +26,16 @@ MainWindow::MainWindow(QWidget *parent)
   auto m =
     parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
 
-  vtkSmartPointer<vtkSphereSource> sphereSource = 
-    vtkSmartPointer<vtkSphereSource>::New();
-  sphereSource->SetCenter(0.0, 0.0, 0.0);
-  sphereSource->SetRadius(5.0);
+  auto mesh_pd = polydata_for_trimesh(m);
+
+  // vtkSmartPointer<vtkSphereSource> sphereSource = 
+  //   vtkSmartPointer<vtkSphereSource>::New();
+  // sphereSource->SetCenter(0.0, 0.0, 0.0);
+  // sphereSource->SetRadius(5.0);
  
   vtkSmartPointer<vtkPolyDataMapper> mapper = 
     vtkSmartPointer<vtkPolyDataMapper>::New();
-  mapper->SetInputConnection(sphereSource->GetOutputPort());
+  mapper->SetInputData(mesh_pd); //sphereSource->GetOutputPort());
  
   vtkSmartPointer<vtkActor> actor = 
     vtkSmartPointer<vtkActor>::New();
