@@ -7,8 +7,12 @@
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
 
+#include "system/parse_stl.h"
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+
+using namespace gca;
 
 MainWindow::MainWindow(QWidget *parent)
   : QMainWindow(parent)//, ui(new Ui::MainWindow)

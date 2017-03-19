@@ -13,8 +13,18 @@ include(QtCommon)
 
 project(example VERSION 1.0)
 
+find_package(CGAL REQUIRED COMPONENTS Core)
+include( ${CGAL_USE_FILE} )
+
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
+
+SET(EXTRA_CXX_COMPILE_FLAGS "-std=c++11 -I./src -I./test -I/opt/local/include -I/Users/dillon/CppWorkspace/gca/src -O2")
+
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_COMPILE_FLAGS}")
+
+SET(CXX_OCL_LINK_FLAGS "-L/Users/dillon/CppWorkspace/gca/")
+SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${CXX_OCL_LINK_FLAGS}")
 
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
@@ -40,7 +50,7 @@ find_package(Qt5Widgets REQUIRED)
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
     ${SOURCE_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 )
-target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES} ${CGAL_LIBRARIES} utils geometry gcode gca)
 
 qt5_use_modules(${PROJECT_NAME} Widgets)
 
