@@ -27,6 +27,7 @@ public:
 private slots:
   void handle_accept_slice();
   void handle_reject_slice();
+  void handle_set_done();
 
 private:
 
@@ -42,8 +43,6 @@ private:
   std::vector<gca::Nef_polyhedron> finished;
   std::vector<gca::Nef_polyhedron> in_progress;
 
-  
-
   QVTKWidget* vtk_window;
 
   QLabel* in_progress_heading;
@@ -51,6 +50,7 @@ private:
 
   QPushButton* accept_button;
   QPushButton* reject_button;
+  QPushButton* set_done_button;
 
   void update_active_mesh(const gca::triangular_mesh& m);
   void update_active_plane(const gca::plane p);

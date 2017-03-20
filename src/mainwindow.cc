@@ -83,7 +83,7 @@ MainWindow::MainWindow(QWidget *parent)
   QPushButton* button2 = new QPushButton("Load STL");
   accept_button = new QPushButton("Accept slice", this);
   reject_button = new QPushButton("Reject slice", this);
-  QPushButton* set_done_button = new QPushButton("Done with part");
+  set_done_button = new QPushButton("Done with part", this);
 
   QVBoxLayout* update_buttons = new QVBoxLayout();
   update_buttons->addWidget(button2);
@@ -113,6 +113,7 @@ MainWindow::MainWindow(QWidget *parent)
 
   connect(accept_button, SIGNAL (released()), this, SLOT (handle_accept_slice()));
   connect(reject_button, SIGNAL (released()), this, SLOT (handle_reject_slice()));
+  connect(set_done_button, SIGNAL (released()), this, SLOT (handle_set_done()));
 
   active_mesh =
     parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
@@ -219,6 +220,14 @@ void MainWindow::update_active_mesh(const gca::triangular_mesh& new_mesh) {
 
   vtk_window->update();
 
+}
+
+void MainWindow::handle_set_done() {
+  if (in_progress.size() == 0) {
+    in_progress_heading->setText("ALL DONE");
+  } else {
+    in_progress_heading->setText("next");
+  }
 }
 
 MainWindow::~MainWindow()
