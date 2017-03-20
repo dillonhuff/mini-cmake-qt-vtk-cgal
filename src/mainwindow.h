@@ -68,7 +68,7 @@ private:
   void update_active_plane(const gca::plane p);
   void clear_active_plane();
 
-  void continue_with_next_in_progress_part();
+  void slice_next_part();
 
   // Commands for slice mode
   void handle_accept_slice();
@@ -79,6 +79,9 @@ private:
   void handle_accept_fillet();
   void handle_reject_fillet();
   void handle_set_done_fillet();
+
+  void switch_to_fillet_mode();
+  void fillet_next_part();
   
 };
 

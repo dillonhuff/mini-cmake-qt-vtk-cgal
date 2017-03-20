@@ -122,7 +122,7 @@ void MainWindow::handle_accept_slice() {
     in_progress.push_back(neg_split);
   }
 
-  continue_with_next_in_progress_part();
+  slice_next_part();
 }
 
 void MainWindow::handle_reject_slice() {
@@ -198,10 +198,12 @@ void MainWindow::handle_set_done_slice() {
   update_active_mesh(next_mesh);
 }
 
-void MainWindow::continue_with_next_in_progress_part() {
+void MainWindow::slice_next_part() {
 
   if (in_progress.size() == 0) {
     in_progress_heading->setText("All parts are finished");
+    switch_to_fillet_mode();
+    fillet_next_part();
     return;
   }
 
@@ -248,6 +250,14 @@ void MainWindow::handle_set_done() {
     DBG_ASSERT(false);
   }
 
+}
+
+void MainWindow::switch_to_fillet_mode() {
+  current_mode = FILLET_MODE;
+  clear_active_plane();
+}
+
+void MainWindow::fillet_next_part() {
 }
 
 MainWindow::~MainWindow()
