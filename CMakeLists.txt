@@ -23,7 +23,7 @@ SET(EXTRA_CXX_COMPILE_FLAGS "-std=c++11 -I./src -I./test -I/opt/local/include -I
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_COMPILE_FLAGS}")
 
-SET(CXX_OCL_LINK_FLAGS "-L/Users/dillon/CppWorkspace/gca/")
+SET(CXX_OCL_LINK_FLAGS "-L/Users/dillon/CppWorkspace/gca/ -locl -locl.11.10.66")
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${CXX_OCL_LINK_FLAGS}")
 
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
@@ -37,6 +37,7 @@ set(IDENTIFIER "com.example.Example")
 set(SOURCE_FILES
     src/main.cc
     src/mainwindow.cc
+    src/part_slicing.cpp
 )
 
 add_project_meta(META_FILES_TO_INCLUDE)
@@ -50,7 +51,7 @@ find_package(Qt5Widgets REQUIRED)
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
     ${SOURCE_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 )
-target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES} ${CGAL_LIBRARIES} utils geometry gcode gca)
+target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES} ${CGAL_LIBRARIES} utils backend gprocess geometry gcode gca)
 
 qt5_use_modules(${PROJECT_NAME} Widgets)
 
