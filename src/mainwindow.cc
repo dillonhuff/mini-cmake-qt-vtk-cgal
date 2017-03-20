@@ -97,7 +97,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 }
 
-void MainWindow::handle_accept() {
+void MainWindow::handle_accept_slice() {
   in_progress_heading->setText("OH YEAH!!!");
 
   auto part_nef = trimesh_to_nef_polyhedron(active_mesh);
@@ -125,7 +125,7 @@ void MainWindow::handle_accept() {
   continue_with_next_in_progress_part();
 }
 
-void MainWindow::handle_reject() {
+void MainWindow::handle_reject_slice() {
   if (slice_planes.size() == 0) {
     in_progress_heading->setText("ERROR: No further slice planes!");
     return;
@@ -185,7 +185,7 @@ void MainWindow::update_active_mesh(const gca::triangular_mesh& new_mesh) {
 
 }
 
-void MainWindow::handle_set_done() {
+void MainWindow::handle_set_done_slice() {
 
   finished.push_back(active_mesh);
 
@@ -213,6 +213,42 @@ void MainWindow::continue_with_next_in_progress_part() {
   auto mesh = nef_to_single_trimesh(next_part.nef);
 
   update_active_mesh(mesh);
+
+}
+
+void MainWindow::handle_accept_fillet() {
+}
+
+void MainWindow::handle_reject_fillet() {
+}
+
+void MainWindow::handle_set_done_fillet() {
+}
+
+void MainWindow::handle_accept() {
+  if (current_mode == SLICE_MODE) {
+    handle_accept_slice();
+  } else {
+    DBG_ASSERT(false);
+  }
+
+}
+
+void MainWindow::handle_reject() {
+  if (current_mode == SLICE_MODE) {
+    handle_reject_slice();
+  } else {
+    DBG_ASSERT(false);
+  }
+  
+}
+
+void MainWindow::handle_set_done() {
+  if (current_mode == SLICE_MODE) {
+    handle_set_done_slice();
+  } else {
+    DBG_ASSERT(false);
+  }
 
 }
 

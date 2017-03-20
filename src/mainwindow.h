@@ -19,6 +19,11 @@
 
 enum edit_mode { FILLET_MODE, SLICE_MODE };
 
+struct filletable_part {
+  gca::triangular_mesh part;
+  
+};
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -48,6 +53,9 @@ private:
   std::vector<gca::triangular_mesh> finished;
   std::vector<gca::part_split> in_progress;
 
+  std::vector<filletable_part> in_progress_fillets;
+  std::vector<filletable_part> finished_fillets;
+
   QVTKWidget* vtk_window;
 
   QLabel* in_progress_heading;
@@ -63,6 +71,16 @@ private:
 
   void continue_with_next_in_progress_part();
 
+  // Commands for slice mode
+  void handle_accept_slice();
+  void handle_reject_slice();
+  void handle_set_done_slice();
+
+  // Commands for fillet mode
+  void handle_accept_fillet();
+  void handle_reject_fillet();
+  void handle_set_done_fillet();
+  
 };
 
 #endif
