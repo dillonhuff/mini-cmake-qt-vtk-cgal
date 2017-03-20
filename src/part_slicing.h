@@ -1,3 +1,5 @@
+#pragma once
+
 #include "geometry/triangular_mesh_utils.h"
 #include "geometry/vtk_debug.h"
 #include "geometry/vtk_utils.h"
@@ -14,165 +16,49 @@ namespace gca {
     Nef_polyhedron part_nef;
   };
 
-  bool is_centralized(const std::vector<surface>& corner_group);
+  // bool is_centralized(const std::vector<surface>& corner_group);
 
-  std::vector<shared_edge>
-  edges_to_fillet(const std::vector<surface>& cg,
-		  const triangular_mesh& m,
-		  const point dir);
+  // std::vector<shared_edge>
+  // edges_to_fillet(const std::vector<surface>& cg,
+  // 		  const triangular_mesh& m,
+  // 		  const point dir);
 
-  bool all_corner_groups_millable(const std::vector<std::vector<surface> >& corner_groups);
+  // bool all_corner_groups_millable(const std::vector<std::vector<surface> >& corner_groups);
   
-  void vtk_debug_shared_edges(const std::vector<shared_edge>& edges,
-			      const triangular_mesh& m);
-  bool
-  solveable_by_filleting(const triangular_mesh& m,
-			 const std::vector<std::vector<surface> >& corner_groups);
+  // void vtk_debug_shared_edges(const std::vector<shared_edge>& edges,
+  // 			      const triangular_mesh& m);
+  // bool
+  // solveable_by_filleting(const triangular_mesh& m,
+  // 			 const std::vector<std::vector<surface> >& corner_groups);
 
-  bool is_rectilinear(const triangular_mesh& m,
-		      const std::vector<std::vector<surface> >& corner_groups);
+  // bool is_rectilinear(const triangular_mesh& m,
+  // 		      const std::vector<std::vector<surface> >& corner_groups);
 
-  bool simplified_corners(const std::vector<std::vector<surface> >& corner_groups,
-			  const std::vector<triangular_mesh>& pos_meshes);
+  // bool simplified_corners(const std::vector<std::vector<surface> >& corner_groups,
+  // 			  const std::vector<triangular_mesh>& pos_meshes);
 
-  int count_planes(const std::vector<std::vector<surface> >& corner_groups);
+  // int count_planes(const std::vector<std::vector<surface> >& corner_groups);
 
-  bool is_finished(part_decomposition const * const pd);
-  bool not_finished(part_decomposition const * const pd);
+  // double distance(const polygon_3& l, const polygon_3& r);
 
-  std::vector<part_decomposition*>
-  reduce_solution(part_decomposition* pd);
+  // bool is_deep(const feature& f, const double depth_factor);
 
-  void reduce_solutions(std::vector<part_decomposition*>& possible_solutions);
-
-  bool plane_slice_is_finished(plane_slice const * const pd);
-
-
-  double distance(const polygon_3& l, const polygon_3& r);
-
-  bool is_deep(const feature& f, const double depth_factor);
-
-  bool is_deep_external(const feature& f, const double depth_factor);
+  // bool is_deep_external(const feature& f, const double depth_factor);
   
-//   std::vector<feature*> check_deep_features(const triangular_mesh& m) {
-//     vector<surface> sfs = outer_surfaces(m);
-//     DBG_ASSERT(sfs.size() > 0);
+  // std::vector<feature*> check_deep_features(const triangular_mesh& m);
 
-//     workpiece w(10, 10, 10, ALUMINUM);
-//     auto stock_mesh = align_workpiece(sfs, w);
+  struct part_split {
+    Nef_polyhedron nef;
+    std::vector<feature*> deep_features;
+  };
 
-//     // vector<plane> stock_planes = set_right_handed(max_area_basis(sfs));
-//     // vector<point> dirs;
-//     // for (auto& p : stock_planes) {
-//     //   dirs.push_back(p.normal());
-//     //   dirs.push_back(-1*p.normal());
-//     // }
+  // part_split build_part_split(const triangular_mesh& m);
 
-//     vector<surface> surfs = outer_surfaces(stock_mesh);
+  // part_split build_part_split(const Nef_polyhedron& m);
 
-//     DBG_ASSERT(surfs.size() == 6);
-
-//     vector<point> norms;
-//     for (auto ax : surfs) {
-//       point n = ax.face_orientation(ax.front());
-//       norms.push_back(n);
-//     }
-
-//     DBG_ASSERT(norms.size() == 6);
-
-//     vector<feature*> deep_features;
-    
-//     for (auto& d : norms) {
-//       auto fd = build_min_feature_decomposition(stock_mesh, m, d);
-//       vector<feature*> deep_internal_features = collect_features(fd);
-//       delete_if(deep_internal_features,
-// 		[](const feature* f) { return !(f->is_closed()) ||
-// 		    !is_deep(*f, 5.0); });
-
-//       delete_if(deep_internal_features,
-// 		[](const feature* f) {
-// 		  auto diam = circle_diameter(f->base());
-// 		  if (diam) { return true; }
-// 		  return false;
-// 		});
-
-//       //vtk_debug_features(deep_internal_features);
-
-//       concat(deep_features, deep_internal_features);
-
-//       vector<feature*> deep_external_features = collect_features(fd);
-//       delete_if(deep_external_features,
-// 		[](const feature* f) { return f->is_closed() ||
-// 		    !is_deep_external(*f, 5.0); });
-
-//       //vtk_debug_features(deep_internal_features);
-
-//       concat(deep_features, deep_external_features);
-
-//     }
-
-//     return deep_features;
-//   }
-
-//   struct part_split {
-//     Nef_polyhedron nef;
-//     std::vector<feature*> deep_features;
-//   };
-
-//   part_split build_part_split(const triangular_mesh& m) {
-//     auto fs = check_deep_features(m);
-//     return {trimesh_to_nef_polyhedron(m), fs};
-//   }
-
-//   part_split build_part_split(const Nef_polyhedron& m) {
-//     vector<feature*> fs;
-//     for (auto& m : nef_polyhedron_to_trimeshes(m)) {
-//       concat(fs, check_deep_features(m));
-//     }
-//     return {m, fs};
-//   }
-
-//   int total_deep_features(const std::vector<part_split>& meshes) {
-//     int total = 0;
-
-//     for (auto& m : meshes) {
-//       total += m.deep_features.size();
-//     }
-
-//     return total;
-//   }
+  // int total_deep_features(const std::vector<part_split>& meshes);
   
-//   void delete_duplicate_plans(std::vector<plane>& planes) {
-//     bool deleted_one = true;
-
-//     while (deleted_one) {
-//       deleted_one = false;
-//       for (unsigned i = 0; i < planes.size(); i++) {
-// 	for (unsigned j = 0; j < planes.size(); j++) {
-// 	  if (i != j) {
-// 	    point in = planes[i].normal();
-// 	    point jn = planes[j].normal();
-
-// 	    if (angle_eps(in, jn, 0.0, 1.0)) {
-// 	      point ipt = planes[i].pt();
-// 	      point jpt = planes[j].pt();
-// 	      point diff = ipt - jpt;
-
-// 	      if (angle_eps(diff, in, 90.0, 1.0)) {
-// 		planes.erase(begin(planes) + j);
-// 		deleted_one = true;
-// 		break;
-// 	      }
-// 	    }
-// 	  }
-// 	}
-
-// 	if (deleted_one) {
-// 	  break;
-// 	}
-//       }
-//     }
-//   }
+  // void delete_duplicate_planes(std::vector<plane>& planes);
   
 //   std::vector<std::vector<part_split> >
 //   split_away_deep_features(const part_split& part_nef) {
@@ -362,4 +248,4 @@ namespace gca {
 //     return solved;
 //   }
 
-// }
+}

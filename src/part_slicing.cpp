@@ -11,64 +11,9 @@
 #include "synthesis/millability.h"
 #include "synthesis/visual_debug.h"
 
+#include "part_slicing.h"
+
 namespace gca {
-
-  struct part_search_result {
-    Nef_polyhedron part_nef;
-  };
-
-  enum decomposition_type { MILLABLE_SHAPE,
-			    FILLETED_SHAPE,
-			    PLANE_SLICE,
-			    UNFINISHED_SHAPE };
-
-  class part_decomposition {
-  public:
-    virtual decomposition_type decomp_type() const = 0;
-    virtual ~part_decomposition() {}
-  };
-
-  class millable_shape : public part_decomposition {
-  public:
-    Nef_polyhedron shape;
-
-    millable_shape(const Nef_polyhedron& p_shape) :
-      shape(p_shape) {}
-
-    decomposition_type decomp_type() const { return MILLABLE_SHAPE; }
-  };
-
-  class filleted : public part_decomposition {
-    triangular_mesh mesh;
-    std::vector<shared_edge> edges_to_fillet;
-
-  public:
-    decomposition_type decomp_type() const { return FILLETED_SHAPE; }
-  };
-
-  class plane_slice : public part_decomposition {
-    Nef_polyhedron shape;
-    plane slice;
-    std::vector<part_decomposition*> results;
-
-  public:
-    decomposition_type decomp_type() const { return PLANE_SLICE; }
-
-    const std::vector<part_decomposition*>& children() const { return results; }
-
-  };
-  
-  class unfinished_shape : public part_decomposition {
-    Nef_polyhedron shape;
-
-  public:
-
-    unfinished_shape(const Nef_polyhedron& p_shape) :
-      shape(p_shape) {}
-    
-    decomposition_type decomp_type() const { return UNFINISHED_SHAPE; }
-
-  };
 
   bool is_centralized(const std::vector<surface>& corner_group) {
     int num_surfaces_with_ortho_multiple_ortho_connections = 0;
@@ -271,156 +216,6 @@ namespace gca {
     return num_planes;
   }
 
-  bool is_finished(part_decomposition const * const pd);
-  bool not_finished(part_decomposition const * const pd) {
-    return !is_finished(pd);
-  }
-
-  std::vector<part_decomposition*>
-  reduce_solution(part_decomposition* pd) {
-    DBG_ASSERT(pd->decomp_type() == PLANE_SLICE);
-
-    return {};
-  }
-
-  void reduce_solutions(std::vector<part_decomposition*>& possible_solutions) {
-    auto first_unfinished =
-      find_if(begin(possible_solutions), end(possible_solutions), not_finished);
-
-    if (first_unfinished == end(possible_solutions)) { return; }
-
-    part_decomposition* to_reduce = *first_unfinished;
-    remove(to_reduce, possible_solutions);
-
-    vector<part_decomposition*> reductions =
-      reduce_solution(to_reduce);
-    concat(possible_solutions, reductions);
-
-    delete to_reduce;
-  }
-
-  bool plane_slice_is_finished(plane_slice const * const pd) {
-
-    for (auto c : pd->children()) {
-      if (!is_finished(c)) {
-	return false;
-      }
-    }
-
-    return true;
-  }
-
-  bool is_finished(part_decomposition const * const pd) {
-    switch (pd->decomp_type()) {
-    case MILLABLE_SHAPE:
-      return true;
-    case FILLETED_SHAPE:
-      return true;
-    case UNFINISHED_SHAPE:
-      return false;
-    case PLANE_SLICE:
-      return plane_slice_is_finished(static_cast<plane_slice const * const>(pd));
-    default:
-      DBG_ASSERT(false);
-    }
-  }
-
-  void
-  transfer_solved_decompositions(std::vector<part_decomposition*>& possible_solutions,
-				 std::vector<part_decomposition*>& solutions) {
-    auto new_solutions =
-      select(possible_solutions, is_finished);
-    delete_if(possible_solutions, is_finished);
-
-    concat(solutions, new_solutions);
-  }
-  
-  std::vector<part_decomposition*>
-  search_part_space(const Nef_polyhedron& part_nef) {
-    vector<triangular_mesh> ms = nef_polyhedron_to_trimeshes(part_nef);
-
-    if (ms.size() != 1) {
-      return {};
-    }
-
-    // unfinished_shape* initial_part = new unfinished_shape(part_nef);
-    // vector<part_decomposition*> possible_solutions{initial_part};
-    // vector<part_decomposition*> solutions;
-
-    // while (possible_solutions.size() > 0) {
-    //   reduce_solutions(possible_solutions);
-    //   transfer_solved_decompositions(possible_solutions, solutions);
-    // }
-
-    // return solutions;
-
-    auto m = ms.front();
-
-    auto sfc = build_surface_milling_constraints(m);
-    vector<vector<surface> > corner_groups =
-      sfc.hard_corner_groups();
-
-    cout << "# of hard corner groups = " << corner_groups.size() << endl;
-    //vtk_debug_mesh(m);
-
-    // if (solveable_by_filleting(m, corner_groups)) {
-    //   cout << "Solveable by filleting" << endl;
-    //   return {{part_nef}};
-    // }
-
-    if (is_rectilinear(m, corner_groups)) {
-      cout << "Rectilinear!" << endl;
-      return {};
-      //return { {{part_nef}} };
-    }
-
-    if (corner_groups.size() == 0) {
-      cout << "No hard corner groups left" << endl;
-      //vtk_debug_mesh(m);
-      //return { {{part_nef}} };
-      return {};
-    }
-
-    int num_planes = count_planes(corner_groups); //0;
-    cout << "Number of possible clipping planes = " << num_planes << endl;
-
-    for (auto& r : corner_groups) {
-      //vtk_debug_highlight_inds(r);
-
-      if (!is_centralized(r)) {
-	for (auto& s : r) {
-	  plane p = surface_plane(s);
-	  //vtk_debug(m, p);
-
-	  auto clipped_nef_pos = clip_nef(part_nef, p.slide(0.0001));
-	  auto clipped_nef_neg = clip_nef(part_nef, p.flip().slide(0.0001));
-
-	  auto clipped_meshes = nef_polyhedron_to_trimeshes(clipped_nef_pos);
-	  //vtk_debug_meshes(clipped_meshes);
-
-	  clipped_meshes = nef_polyhedron_to_trimeshes(clipped_nef_neg);
-	  //vtk_debug_meshes(clipped_meshes);
-	  
-	  vector<triangular_mesh> pos_meshes =
-	    nef_polyhedron_to_trimeshes(clipped_nef_pos);
-	  concat(pos_meshes, nef_polyhedron_to_trimeshes(clipped_nef_neg));
-
-	  if (simplified_corners(corner_groups, pos_meshes)) {
-
-	    cout << "Simlified corners! continuing" << endl;
-	  
-	    auto res_pos = search_part_space(clipped_nef_pos);
-	    auto res_neg = search_part_space(clipped_nef_neg);
-
-	  }
-
-	}
-      }
-    }
-
-    return {};
-  }
-
   double distance(const polygon_3& l, const polygon_3& r) {
     double dist = 1e25;
     for (auto lpt : l.vertices()) {
@@ -535,11 +330,6 @@ namespace gca {
     return deep_features;
   }
 
-  struct part_split {
-    Nef_polyhedron nef;
-    std::vector<feature*> deep_features;
-  };
-
   part_split build_part_split(const triangular_mesh& m) {
     auto fs = check_deep_features(m);
     return {trimesh_to_nef_polyhedron(m), fs};
@@ -563,7 +353,7 @@ namespace gca {
     return total;
   }
   
-  void delete_duplicate_plans(std::vector<plane>& planes) {
+  void delete_duplicate_planes(std::vector<plane>& planes) {
     bool deleted_one = true;
 
     while (deleted_one) {
@@ -640,7 +430,7 @@ namespace gca {
 
     cout << "# slice planes before deleting = " << possible_slice_planes.size() << endl;
 
-    delete_duplicate_plans(possible_slice_planes);
+    delete_duplicate_planes(possible_slice_planes);
 
     cout << "# of slice planes = " << possible_slice_planes.size() << endl;
 
