@@ -384,6 +384,31 @@ namespace gca {
       }
     }
   }
+
+  std::vector<plane> possible_slice_planes(const triangular_mesh& m) {
+
+    auto sfc = build_surface_milling_constraints(m);
+    vector<vector<surface> > corner_groups =
+      sfc.hard_corner_groups();
+
+    vector<plane> possible_slice_planes;
+    
+    for (auto& r : corner_groups) {
+      //vtk_debug_highlight_inds(r);
+
+      //      if (!is_centralized(r)) {
+      for (auto& s : r) {
+	plane p = surface_plane(s);
+	possible_slice_planes.push_back(p);
+      }
+    }
+
+    cout << "# slice planes before deleting = " << possible_slice_planes.size() << endl;
+
+    delete_duplicate_planes(possible_slice_planes);
+
+    return possible_slice_planes;
+  }
   
   std::vector<std::vector<part_split> >
   split_away_deep_features(const part_split& part_nef) {
@@ -422,10 +447,10 @@ namespace gca {
       //vtk_debug_highlight_inds(r);
 
       //      if (!is_centralized(r)) {
-	for (auto& s : r) {
-	  plane p = surface_plane(s);
-	  possible_slice_planes.push_back(p);
-	}
+      for (auto& s : r) {
+	plane p = surface_plane(s);
+	possible_slice_planes.push_back(p);
+      }
     }
 
     cout << "# slice planes before deleting = " << possible_slice_planes.size() << endl;
@@ -475,7 +500,7 @@ namespace gca {
       cout << "Done with iteration" << endl;
 
     }
-	//      }
+    //      }
     //    }
 
     return productive_splits;

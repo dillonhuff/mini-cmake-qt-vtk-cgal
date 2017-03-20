@@ -15,6 +15,7 @@
 #include "geometry/plane.h"
 #include "geometry/mesh_operations.h"
 #include "geometry/triangular_mesh.h"
+#include "part_slicing.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -41,7 +42,7 @@ private:
   gca::triangular_mesh active_mesh;
 
   std::vector<gca::triangular_mesh> finished;
-  std::vector<gca::Nef_polyhedron> in_progress;
+  std::vector<gca::part_split> in_progress;
 
   QVTKWidget* vtk_window;
 
@@ -55,6 +56,8 @@ private:
   void update_active_mesh(const gca::triangular_mesh& m);
   void update_active_plane(const gca::plane p);
   void clear_active_plane();
+
+  void continue_with_next_in_progress_part();
 
 };
 

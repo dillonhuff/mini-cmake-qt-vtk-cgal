@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
   app.setWindowIcon(appIcon);
 
   MainWindow mainWindow;
+  mainWindow.setMinimumSize(900, 500);
   mainWindow.show();
   return app.exec();
 }

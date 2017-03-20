@@ -10,68 +10,10 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "part_slicing.h"
 
 #include <QHBoxLayout>
 
 using namespace gca;
-
-void delete_duplicate_plans(std::vector<plane>& planes) {
-  bool deleted_one = true;
-
-  while (deleted_one) {
-    deleted_one = false;
-    for (unsigned i = 0; i < planes.size(); i++) {
-      for (unsigned j = 0; j < planes.size(); j++) {
-	if (i != j) {
-	  point in = planes[i].normal();
-	  point jn = planes[j].normal();
-
-	  if (angle_eps(in, jn, 0.0, 1.0)) {
-	    point ipt = planes[i].pt();
-	    point jpt = planes[j].pt();
-	    point diff = ipt - jpt;
-
-	    if (angle_eps(diff, in, 90.0, 1.0)) {
-	      planes.erase(begin(planes) + j);
-	      deleted_one = true;
-	      break;
-	    }
-	  }
-	}
-      }
-
-      if (deleted_one) {
-	break;
-      }
-    }
-  }
-}
-
-std::vector<plane> possible_slice_planes(const triangular_mesh& m) {
-
-  auto sfc = build_surface_milling_constraints(m);
-  vector<vector<surface> > corner_groups =
-    sfc.hard_corner_groups();
-
-  vector<plane> possible_slice_planes;
-    
-  for (auto& r : corner_groups) {
-    //vtk_debug_highlight_inds(r);
-
-    //      if (!is_centralized(r)) {
-    for (auto& s : r) {
-      plane p = surface_plane(s);
-      possible_slice_planes.push_back(p);
-    }
-  }
-
-  cout << "# slice planes before deleting = " << possible_slice_planes.size() << endl;
-
-  delete_duplicate_plans(possible_slice_planes);
-
-  return possible_slice_planes;
-}
 
 MainWindow::MainWindow(QWidget *parent)
   : QMainWindow(parent)
@@ -161,27 +103,39 @@ void MainWindow::handle_accept_slice() {
   part_split pos_split = build_part_split(clipped_nef_pos);
   part_split neg_split = build_part_split(clipped_nef_neg);
 
-  if (pos_split.deep_features.size() > 0) {
-    auto new_meshes = nef_polyhedron_to_trimeshes(clipped_nef_pos);
+  // if (pos_split.deep_features.size() > 0) {
+  //   auto new_meshes = nef_polyhedron_to_trimeshes(clipped_nef_pos);
 
-    if (neg_split.deep_features.size() > 0) {
-      in_progress.push_back(clipped_nef_neg);
-    }
+  bool pos_finished = pos_split.deep_features.size() == 0;
+  bool neg_finished = neg_split.deep_features.size() == 0;
 
-    update_active_mesh(new_meshes.front());
-
-    return;
+  if (!pos_finished) {
+    in_progress.push_back(pos_split);
   }
 
-  if (neg_split.deep_features.size() > 0) {
-    auto new_meshes = nef_polyhedron_to_trimeshes(clipped_nef_neg);
-
-    update_active_mesh(new_meshes.front());
-
-    return;
+  if (!neg_finished) {
+    in_progress.push_back(neg_split);
   }
 
-  in_progress_heading->setText("COMPLETELY DONE");
+  continue_with_next_in_progress_part();
+  //   if (neg_split.deep_features.size() > 0) {
+  //     in_progress.push_back(neg_split);
+  //   }
+
+  //   update_active_mesh(new_meshes.front());
+
+  //   return;
+  // }
+
+  // if (neg_split.deep_features.size() > 0) {
+  //   auto new_meshes = nef_polyhedron_to_trimeshes(clipped_nef_neg);
+
+  //   update_active_mesh(new_meshes.front());
+
+  //   return;
+  // }
+
+  //in_progress_heading->setText("COMPLETELY DONE");
 }
 
 void MainWindow::handle_reject_slice() {
@@ -253,10 +207,26 @@ void MainWindow::handle_set_done() {
     return;
   }
 
-  auto next_mesh = nef_to_single_trimesh(in_progress.back());
+  auto next_mesh = nef_to_single_trimesh(in_progress.back().nef);
   in_progress.pop_back();
 
   update_active_mesh(next_mesh);
+}
+
+void MainWindow::continue_with_next_in_progress_part() {
+
+  if (in_progress.size() == 0) {
+    in_progress_heading->setText("All parts are finished");
+    return;
+  }
+
+  part_split next_part = in_progress.back();
+  in_progress.pop_back();
+
+  auto mesh = nef_to_single_trimesh(next_part.nef);
+
+  update_active_mesh(mesh);
+
 }
 
 MainWindow::~MainWindow()
