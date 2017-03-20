@@ -187,8 +187,6 @@ void MainWindow::update_active_mesh(const gca::triangular_mesh& new_mesh) {
 
 void MainWindow::handle_set_done_slice() {
 
-  finished.push_back(active_mesh);
-
   if (in_progress.size() == 0) {
     in_progress_heading->setText("ALL DONE");
     return;

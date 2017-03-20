@@ -50,7 +50,6 @@ private:
   gca::plane active_plane;
   gca::triangular_mesh active_mesh;
 
-  std::vector<gca::triangular_mesh> finished;
   std::vector<gca::part_split> in_progress;
 
   std::vector<filletable_part> in_progress_fillets;
