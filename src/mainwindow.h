@@ -13,6 +13,7 @@
 #include <QPushButton>
 
 #include "geometry/plane.h"
+#include "geometry/mesh_operations.h"
 #include "geometry/triangular_mesh.h"
 
 class MainWindow : public QMainWindow {
@@ -38,6 +39,9 @@ private:
   gca::plane active_plane;
   gca::triangular_mesh active_mesh;
 
+  std::vector<gca::Nef_polyhedron> finished;
+  std::vector<gca::Nef_polyhedron> in_progress;
+
   
 
   QVTKWidget* vtk_window;
@@ -49,6 +53,8 @@ private:
   QPushButton* reject_button;
 
   void update_active_mesh(const gca::triangular_mesh& m);
+  void update_active_plane(const gca::plane p);
+  void clear_active_plane();
 
 };
 

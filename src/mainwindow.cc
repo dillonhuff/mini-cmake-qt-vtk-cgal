@@ -156,9 +156,9 @@ void MainWindow::handle_accept_slice() {
   auto clipped_nef_pos = clip_nef(part_nef, active_plane.slide(0.0001));
   auto clipped_nef_neg = clip_nef(part_nef, active_plane.flip().slide(0.0001));
 
-  auto new_mesh = nef_to_single_trimesh(clipped_nef_pos);
-  
-  update_active_mesh(new_mesh);
+  auto new_meshes = nef_polyhedron_to_trimeshes(clipped_nef_pos);
+
+  update_active_mesh(new_meshes.front());
 }
 
 void MainWindow::handle_reject_slice() {
@@ -170,10 +170,19 @@ void MainWindow::handle_reject_slice() {
   active_plane = slice_planes.back();
   slice_planes.pop_back();
 
+  update_active_plane(active_plane);
+
+}
+
+void MainWindow::update_active_plane(const gca::plane p) {
   renderer->RemoveActor(active_plane_actor);
-  active_plane_actor = plane_actor(vtk_plane(active_plane));
+  active_plane_actor = plane_actor(vtk_plane(p));
   renderer->AddActor(active_plane_actor);
   vtk_window->update();
+}
+
+void MainWindow::clear_active_plane() {
+  renderer->RemoveActor(active_plane_actor);
 }
 
 void MainWindow::update_active_mesh(const gca::triangular_mesh& new_mesh) {
@@ -182,14 +191,15 @@ void MainWindow::update_active_mesh(const gca::triangular_mesh& new_mesh) {
 
   slice_planes = possible_slice_planes(active_mesh);
 
-  DBG_ASSERT(slice_planes.size() > 0);
+  if (slice_planes.size() > 0) {
+    active_plane = slice_planes.back();
+    slice_planes.pop_back();
 
-  active_plane = slice_planes.back();
-  slice_planes.pop_back();
-
-  renderer->RemoveActor(active_plane_actor);
-  active_plane_actor = plane_actor(vtk_plane(active_plane));
-  renderer->AddActor(active_plane_actor);
+    update_active_plane(active_plane);
+  } else {
+    slice_planes = {};
+    clear_active_plane();
+  }
 
   active_mesh_polydata = polydata_for_trimesh(active_mesh);
   color_polydata(active_mesh_polydata, 0, 255, 0);
@@ -206,6 +216,8 @@ void MainWindow::update_active_mesh(const gca::triangular_mesh& new_mesh) {
 
   
   renderer->AddActor(active_mesh_actor);
+
+  vtk_window->update();
 
 }
 
