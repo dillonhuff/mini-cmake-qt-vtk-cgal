@@ -13,30 +13,35 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QHBoxLayout>
+#include <QPushButton>
+
 using namespace gca;
 
 MainWindow::MainWindow(QWidget *parent)
-  : QMainWindow(parent)//, ui(new Ui::MainWindow)
+  : QMainWindow(parent)
 {
-  //ui->setupUi(this);
 
   vtk_window = new QVTKWidget(this, Qt::Widget);
-  setCentralWidget(vtk_window);
+
+  QHBoxLayout *layout = new QHBoxLayout;
+  QPushButton *button2 = new QPushButton("button2");
+
+  layout->addWidget(vtk_window);
+  layout->addWidget(button2);
+
+  setCentralWidget(new QWidget);
+  centralWidget()->setLayout(layout);
 
   auto m =
     parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
 
   auto mesh_pd = polydata_for_trimesh(m);
 
-  // vtkSmartPointer<vtkSphereSource> sphereSource = 
-  //   vtkSmartPointer<vtkSphereSource>::New();
-  // sphereSource->SetCenter(0.0, 0.0, 0.0);
-  // sphereSource->SetRadius(5.0);
- 
   vtkSmartPointer<vtkPolyDataMapper> mapper = 
     vtkSmartPointer<vtkPolyDataMapper>::New();
-  mapper->SetInputData(mesh_pd); //sphereSource->GetOutputPort());
- 
+  mapper->SetInputData(mesh_pd);
+
   vtkSmartPointer<vtkActor> actor = 
     vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);
