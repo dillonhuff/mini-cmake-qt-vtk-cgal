@@ -159,6 +159,8 @@ void MainWindow::handle_accept_slice() {
 
   auto new_meshes = nef_polyhedron_to_trimeshes(clipped_nef_pos);
 
+  in_progress.push_back(clipped_nef_neg);
+
   update_active_mesh(new_meshes.front());
 }
 
@@ -223,11 +225,18 @@ void MainWindow::update_active_mesh(const gca::triangular_mesh& new_mesh) {
 }
 
 void MainWindow::handle_set_done() {
+
+  finished.push_back(active_mesh);
+
   if (in_progress.size() == 0) {
     in_progress_heading->setText("ALL DONE");
-  } else {
-    in_progress_heading->setText("next");
+    return;
   }
+
+  auto next_mesh = nef_to_single_trimesh(in_progress.back());
+  in_progress.pop_back();
+
+  update_active_mesh(next_mesh);
 }
 
 MainWindow::~MainWindow()

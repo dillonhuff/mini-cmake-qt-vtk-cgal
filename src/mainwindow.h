@@ -40,7 +40,7 @@ private:
   gca::plane active_plane;
   gca::triangular_mesh active_mesh;
 
-  std::vector<gca::Nef_polyhedron> finished;
+  std::vector<gca::triangular_mesh> finished;
   std::vector<gca::Nef_polyhedron> in_progress;
 
   QVTKWidget* vtk_window;
