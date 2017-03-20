@@ -16,8 +16,6 @@
 #include "ui_mainwindow.h"
 
 #include <QHBoxLayout>
-#include <QLabel>
-#include <QPushButton>
 
 using namespace gca;
 
@@ -87,7 +85,9 @@ MainWindow::MainWindow(QWidget *parent)
   QHBoxLayout *layout = new QHBoxLayout;
 
   QPushButton* button2 = new QPushButton("Load STL");
-  QPushButton* accept_button = new QPushButton("Accept slice");
+
+  accept_button = new QPushButton("Accept slice", this);
+
   QPushButton* reject_button = new QPushButton("Reject slice");
   QPushButton* set_done_button = new QPushButton("Done with part");
 
@@ -97,7 +97,7 @@ MainWindow::MainWindow(QWidget *parent)
   update_buttons->addWidget(reject_button);
   update_buttons->addWidget(set_done_button);
 
-  QLabel* in_progress_heading = new QLabel();
+  in_progress_heading = new QLabel();
   in_progress_heading->setText("In Progress");
 
   QVBoxLayout* in_progress = new QVBoxLayout();
@@ -116,6 +116,8 @@ MainWindow::MainWindow(QWidget *parent)
 
   setCentralWidget(new QWidget);
   centralWidget()->setLayout(layout);
+
+  connect(accept_button, SIGNAL (released()), this, SLOT (handle_accept_slice()));
 
   auto m =
     parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
@@ -146,6 +148,11 @@ MainWindow::MainWindow(QWidget *parent)
 
   vtk_window->show();
   
+}
+
+void MainWindow::handle_accept_slice() {
+  in_progress_heading->setText("OH YEAH!!!");
+  accept_button->resize(100,100);  
 }
 
 MainWindow::~MainWindow()

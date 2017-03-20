@@ -5,6 +5,9 @@
 #include <QScopedPointer>
 
 #include <QVTKWidget.h>
+#include <QLabel>
+#include <QPushButton>
+
 
 // namespace Ui
 // {
@@ -18,9 +21,18 @@ public:
     MainWindow(QWidget *parent = 0);
     virtual ~MainWindow();
 
-private:
 
+private slots:
+  void handle_accept_slice();
+
+private:
+  
   QVTKWidget* vtk_window;
+
+  QLabel* in_progress_heading;
+
+
+  QPushButton* accept_button;
 };
 
 #endif
