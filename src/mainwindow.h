@@ -1,6 +1,7 @@
 #ifndef mainwindow_h
 #define mainwindow_h
 
+#include <vtkActor.h>
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
 
@@ -26,7 +27,8 @@ private slots:
 
 private:
 
-  vtkSmartPointer<vtkRenderer> renderer;  
+  vtkSmartPointer<vtkRenderer> renderer;
+  vtkSmartPointer<vtkActor> active_plane_actor;
 
   std::vector<gca::plane> slice_planes;
   gca::plane active_plane;

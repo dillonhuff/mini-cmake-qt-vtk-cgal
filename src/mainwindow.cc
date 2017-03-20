@@ -1,7 +1,6 @@
 #include <vtkSphereSource.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
-#include <vtkActor.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 
@@ -125,9 +124,10 @@ MainWindow::MainWindow(QWidget *parent)
   active_plane = slice_planes.back();
   slice_planes.pop_back();
 
-  auto plane_act = plane_actor(vtk_plane(active_plane));
+  active_plane_actor = plane_actor(vtk_plane(active_plane));
 
   auto mesh_pd = polydata_for_trimesh(m);
+  color_polydata(mesh_pd, 0, 255, 0);
 
   vtkSmartPointer<vtkPolyDataMapper> mapper = 
     vtkSmartPointer<vtkPolyDataMapper>::New();
@@ -141,7 +141,7 @@ MainWindow::MainWindow(QWidget *parent)
 
   renderer->SetBackground(1, 1, 1);
   renderer->AddActor(actor);
-  renderer->AddActor(plane_act);
+  renderer->AddActor(active_plane_actor);
 
   vtk_window->GetRenderWindow()->AddRenderer(renderer);
 
@@ -161,8 +161,10 @@ void MainWindow::handle_reject_slice() {
 
   active_plane = slice_planes.back();
   slice_planes.pop_back();
-  auto plane_act = plane_actor(vtk_plane(active_plane));
-  renderer->AddActor(plane_act);
+
+  renderer->RemoveActor(active_plane_actor);
+  active_plane_actor = plane_actor(vtk_plane(active_plane));
+  renderer->AddActor(active_plane_actor);
   vtk_window->update();
 }
 
