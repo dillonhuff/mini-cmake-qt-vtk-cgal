@@ -16,49 +16,49 @@ namespace gca {
     Nef_polyhedron part_nef;
   };
 
-  // bool is_centralized(const std::vector<surface>& corner_group);
+  bool is_centralized(const std::vector<surface>& corner_group);
 
-  // std::vector<shared_edge>
-  // edges_to_fillet(const std::vector<surface>& cg,
-  // 		  const triangular_mesh& m,
-  // 		  const point dir);
+  std::vector<shared_edge>
+  edges_to_fillet(const std::vector<surface>& cg,
+  		  const triangular_mesh& m,
+  		  const point dir);
 
-  // bool all_corner_groups_millable(const std::vector<std::vector<surface> >& corner_groups);
+  bool all_corner_groups_millable(const std::vector<std::vector<surface> >& corner_groups);
   
-  // void vtk_debug_shared_edges(const std::vector<shared_edge>& edges,
-  // 			      const triangular_mesh& m);
-  // bool
-  // solveable_by_filleting(const triangular_mesh& m,
-  // 			 const std::vector<std::vector<surface> >& corner_groups);
+  void vtk_debug_shared_edges(const std::vector<shared_edge>& edges,
+  			      const triangular_mesh& m);
+  bool
+  solveable_by_filleting(const triangular_mesh& m,
+  			 const std::vector<std::vector<surface> >& corner_groups);
 
-  // bool is_rectilinear(const triangular_mesh& m,
-  // 		      const std::vector<std::vector<surface> >& corner_groups);
+  bool is_rectilinear(const triangular_mesh& m,
+  		      const std::vector<std::vector<surface> >& corner_groups);
 
-  // bool simplified_corners(const std::vector<std::vector<surface> >& corner_groups,
-  // 			  const std::vector<triangular_mesh>& pos_meshes);
+  bool simplified_corners(const std::vector<std::vector<surface> >& corner_groups,
+  			  const std::vector<triangular_mesh>& pos_meshes);
 
-  // int count_planes(const std::vector<std::vector<surface> >& corner_groups);
+  int count_planes(const std::vector<std::vector<surface> >& corner_groups);
 
-  // double distance(const polygon_3& l, const polygon_3& r);
+  double distance(const polygon_3& l, const polygon_3& r);
 
-  // bool is_deep(const feature& f, const double depth_factor);
+  bool is_deep(const feature& f, const double depth_factor);
 
-  // bool is_deep_external(const feature& f, const double depth_factor);
+  bool is_deep_external(const feature& f, const double depth_factor);
   
-  // std::vector<feature*> check_deep_features(const triangular_mesh& m);
+  std::vector<feature*> check_deep_features(const triangular_mesh& m);
 
   struct part_split {
     Nef_polyhedron nef;
     std::vector<feature*> deep_features;
   };
 
-  // part_split build_part_split(const triangular_mesh& m);
+  part_split build_part_split(const triangular_mesh& m);
 
-  // part_split build_part_split(const Nef_polyhedron& m);
+  part_split build_part_split(const Nef_polyhedron& m);
 
-  // int total_deep_features(const std::vector<part_split>& meshes);
+  int total_deep_features(const std::vector<part_split>& meshes);
   
-  // void delete_duplicate_planes(std::vector<plane>& planes);
+  void delete_duplicate_planes(std::vector<plane>& planes);
   
 //   std::vector<std::vector<part_split> >
 //   split_away_deep_features(const part_split& part_nef) {

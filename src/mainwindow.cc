@@ -10,6 +10,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "part_slicing.h"
 
 #include <QHBoxLayout>
 
@@ -157,11 +158,30 @@ void MainWindow::handle_accept_slice() {
   auto clipped_nef_pos = clip_nef(part_nef, active_plane.slide(0.0001));
   auto clipped_nef_neg = clip_nef(part_nef, active_plane.flip().slide(0.0001));
 
-  auto new_meshes = nef_polyhedron_to_trimeshes(clipped_nef_pos);
+  part_split pos_split = build_part_split(clipped_nef_pos);
+  part_split neg_split = build_part_split(clipped_nef_neg);
 
-  in_progress.push_back(clipped_nef_neg);
+  if (pos_split.deep_features.size() > 0) {
+    auto new_meshes = nef_polyhedron_to_trimeshes(clipped_nef_pos);
 
-  update_active_mesh(new_meshes.front());
+    if (neg_split.deep_features.size() > 0) {
+      in_progress.push_back(clipped_nef_neg);
+    }
+
+    update_active_mesh(new_meshes.front());
+
+    return;
+  }
+
+  if (neg_split.deep_features.size() > 0) {
+    auto new_meshes = nef_polyhedron_to_trimeshes(clipped_nef_neg);
+
+    update_active_mesh(new_meshes.front());
+
+    return;
+  }
+
+  in_progress_heading->setText("COMPLETELY DONE");
 }
 
 void MainWindow::handle_reject_slice() {
