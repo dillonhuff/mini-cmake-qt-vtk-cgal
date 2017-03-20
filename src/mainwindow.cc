@@ -1,5 +1,4 @@
 #include <vtkSphereSource.h>
-#include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
@@ -115,9 +114,9 @@ MainWindow::MainWindow(QWidget *parent)
   connect(accept_button, SIGNAL (released()), this, SLOT (handle_accept_slice()));
   connect(reject_button, SIGNAL (released()), this, SLOT (handle_reject_slice()));
 
-  auto m =
+  active_mesh =
     parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
-  slice_planes = possible_slice_planes(m);
+  slice_planes = possible_slice_planes(active_mesh);
 
   DBG_ASSERT(slice_planes.size() > 0);
 
@@ -126,12 +125,12 @@ MainWindow::MainWindow(QWidget *parent)
 
   active_plane_actor = plane_actor(vtk_plane(active_plane));
 
-  auto mesh_pd = polydata_for_trimesh(m);
-  color_polydata(mesh_pd, 0, 255, 0);
+  active_mesh_polydata = polydata_for_trimesh(active_mesh);
+  color_polydata(active_mesh_polydata, 0, 255, 0);
 
   vtkSmartPointer<vtkPolyDataMapper> mapper = 
     vtkSmartPointer<vtkPolyDataMapper>::New();
-  mapper->SetInputData(mesh_pd);
+  mapper->SetInputData(active_mesh_polydata);
 
   vtkSmartPointer<vtkActor> actor = 
     vtkSmartPointer<vtkActor>::New();
@@ -151,6 +150,15 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::handle_accept_slice() {
   in_progress_heading->setText("OH YEAH!!!");
+
+  auto part_nef = trimesh_to_nef_polyhedron(active_mesh);
+
+  auto clipped_nef_pos = clip_nef(part_nef, active_plane.slide(0.0001));
+  auto clipped_nef_neg = clip_nef(part_nef, active_plane.flip().slide(0.0001));
+
+  auto new_mesh = nef_to_single_trimesh(clipped_nef_pos);
+  
+  update_active_mesh(new_mesh);
 }
 
 void MainWindow::handle_reject_slice() {
@@ -166,6 +174,9 @@ void MainWindow::handle_reject_slice() {
   active_plane_actor = plane_actor(vtk_plane(active_plane));
   renderer->AddActor(active_plane_actor);
   vtk_window->update();
+}
+
+void MainWindow::update_active_mesh(const gca::triangular_mesh& m) {
 }
 
 MainWindow::~MainWindow()

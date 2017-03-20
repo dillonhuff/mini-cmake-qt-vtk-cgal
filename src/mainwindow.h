@@ -2,6 +2,7 @@
 #define mainwindow_h
 
 #include <vtkActor.h>
+#include <vtkPolyData.h>
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
 
@@ -12,6 +13,7 @@
 #include <QPushButton>
 
 #include "geometry/plane.h"
+#include "geometry/triangular_mesh.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -29,9 +31,11 @@ private:
 
   vtkSmartPointer<vtkRenderer> renderer;
   vtkSmartPointer<vtkActor> active_plane_actor;
+  vtkSmartPointer<vtkPolyData> active_mesh_polydata;
 
   std::vector<gca::plane> slice_planes;
   gca::plane active_plane;
+  gca::triangular_mesh active_mesh;
 
   
 
@@ -42,6 +46,9 @@ private:
 
   QPushButton* accept_button;
   QPushButton* reject_button;
+
+  void update_active_mesh(const gca::triangular_mesh& m);
+
 };
 
 #endif
