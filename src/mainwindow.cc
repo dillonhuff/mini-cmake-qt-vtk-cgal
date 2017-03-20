@@ -59,7 +59,10 @@ MainWindow::MainWindow(QWidget *parent)
   connect(set_done_button, SIGNAL (released()), this, SLOT (handle_set_done()));
 
   active_mesh =
-    parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
+    parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/caliperbedlevelingi3v2_fixed - Part 1.stl", 0.0001);
+
+  //parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
+
   slice_planes = possible_slice_planes(active_mesh);
 
   DBG_ASSERT(slice_planes.size() > 0);
@@ -118,24 +121,6 @@ void MainWindow::handle_accept_slice() {
   }
 
   continue_with_next_in_progress_part();
-  //   if (neg_split.deep_features.size() > 0) {
-  //     in_progress.push_back(neg_split);
-  //   }
-
-  //   update_active_mesh(new_meshes.front());
-
-  //   return;
-  // }
-
-  // if (neg_split.deep_features.size() > 0) {
-  //   auto new_meshes = nef_polyhedron_to_trimeshes(clipped_nef_neg);
-
-  //   update_active_mesh(new_meshes.front());
-
-  //   return;
-  // }
-
-  //in_progress_heading->setText("COMPLETELY DONE");
 }
 
 void MainWindow::handle_reject_slice() {
