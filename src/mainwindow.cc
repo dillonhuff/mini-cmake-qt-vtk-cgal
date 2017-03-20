@@ -1,10 +1,8 @@
 #include <vtkSphereSource.h>
 #include <vtkPolyData.h>
-#include <vtkSmartPointer.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkActor.h>
 #include <vtkRenderWindow.h>
-#include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
 
 #include "geometry/vtk_utils.h"
@@ -85,10 +83,8 @@ MainWindow::MainWindow(QWidget *parent)
   QHBoxLayout *layout = new QHBoxLayout;
 
   QPushButton* button2 = new QPushButton("Load STL");
-
   accept_button = new QPushButton("Accept slice", this);
-
-  QPushButton* reject_button = new QPushButton("Reject slice");
+  reject_button = new QPushButton("Reject slice", this);
   QPushButton* set_done_button = new QPushButton("Done with part");
 
   QVBoxLayout* update_buttons = new QVBoxLayout();
@@ -118,14 +114,18 @@ MainWindow::MainWindow(QWidget *parent)
   centralWidget()->setLayout(layout);
 
   connect(accept_button, SIGNAL (released()), this, SLOT (handle_accept_slice()));
+  connect(reject_button, SIGNAL (released()), this, SLOT (handle_reject_slice()));
 
   auto m =
     parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
-  auto planes = possible_slice_planes(m);
+  slice_planes = possible_slice_planes(m);
 
-  DBG_ASSERT(planes.size() > 0);
+  DBG_ASSERT(slice_planes.size() > 0);
 
-  auto plane_act = plane_actor(vtk_plane(planes.front()));
+  active_plane = slice_planes.back();
+  slice_planes.pop_back();
+
+  auto plane_act = plane_actor(vtk_plane(active_plane));
 
   auto mesh_pd = polydata_for_trimesh(m);
 
@@ -136,23 +136,34 @@ MainWindow::MainWindow(QWidget *parent)
   vtkSmartPointer<vtkActor> actor = 
     vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);
- 
-  vtkSmartPointer<vtkRenderer> renderer = 
-    vtkSmartPointer<vtkRenderer>::New();
+
+  renderer = vtkSmartPointer<vtkRenderer>::New();
 
   renderer->SetBackground(1, 1, 1);
   renderer->AddActor(actor);
   renderer->AddActor(plane_act);
-  
+
   vtk_window->GetRenderWindow()->AddRenderer(renderer);
 
   vtk_window->show();
-  
+
 }
 
 void MainWindow::handle_accept_slice() {
   in_progress_heading->setText("OH YEAH!!!");
-  accept_button->resize(100,100);  
+}
+
+void MainWindow::handle_reject_slice() {
+  if (slice_planes.size() == 0) {
+    in_progress_heading->setText("ERROR: No further slice planes!");
+    return;
+  } 
+
+  active_plane = slice_planes.back();
+  slice_planes.pop_back();
+  auto plane_act = plane_actor(vtk_plane(active_plane));
+  renderer->AddActor(plane_act);
+  vtk_window->update();
 }
 
 MainWindow::~MainWindow()
