@@ -17,6 +17,8 @@
 #include "geometry/triangular_mesh.h"
 #include "part_slicing.h"
 
+enum edit_mode { FILLET_MODE, SLICE_MODE };
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -26,11 +28,13 @@ public:
 
 
 private slots:
-  void handle_accept_slice();
-  void handle_reject_slice();
+  void handle_accept();
+  void handle_reject();
   void handle_set_done();
 
 private:
+
+  edit_mode current_mode;
 
   vtkSmartPointer<vtkRenderer> renderer;
   vtkSmartPointer<vtkActor> active_plane_actor;

@@ -19,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent)
   : QMainWindow(parent)
 {
 
+  current_mode = SLICE_MODE;
+
   vtk_window = new QVTKWidget(this, Qt::Widget);
 
   QHBoxLayout *layout = new QHBoxLayout;
@@ -54,8 +56,8 @@ MainWindow::MainWindow(QWidget *parent)
   setCentralWidget(new QWidget);
   centralWidget()->setLayout(layout);
 
-  connect(accept_button, SIGNAL (released()), this, SLOT (handle_accept_slice()));
-  connect(reject_button, SIGNAL (released()), this, SLOT (handle_reject_slice()));
+  connect(accept_button, SIGNAL (released()), this, SLOT (handle_accept()));
+  connect(reject_button, SIGNAL (released()), this, SLOT (handle_reject()));
   connect(set_done_button, SIGNAL (released()), this, SLOT (handle_set_done()));
 
   active_mesh =
@@ -95,7 +97,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 }
 
-void MainWindow::handle_accept_slice() {
+void MainWindow::handle_accept() {
   in_progress_heading->setText("OH YEAH!!!");
 
   auto part_nef = trimesh_to_nef_polyhedron(active_mesh);
@@ -123,7 +125,7 @@ void MainWindow::handle_accept_slice() {
   continue_with_next_in_progress_part();
 }
 
-void MainWindow::handle_reject_slice() {
+void MainWindow::handle_reject() {
   if (slice_planes.size() == 0) {
     in_progress_heading->setText("ERROR: No further slice planes!");
     return;
