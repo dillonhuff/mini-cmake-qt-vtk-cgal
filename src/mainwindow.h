@@ -31,6 +31,7 @@ private:
 
   vtkSmartPointer<vtkRenderer> renderer;
   vtkSmartPointer<vtkActor> active_plane_actor;
+  vtkSmartPointer<vtkActor> active_mesh_actor;
   vtkSmartPointer<vtkPolyData> active_mesh_polydata;
 
   std::vector<gca::plane> slice_planes;

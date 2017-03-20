@@ -132,14 +132,14 @@ MainWindow::MainWindow(QWidget *parent)
     vtkSmartPointer<vtkPolyDataMapper>::New();
   mapper->SetInputData(active_mesh_polydata);
 
-  vtkSmartPointer<vtkActor> actor = 
+  active_mesh_actor = 
     vtkSmartPointer<vtkActor>::New();
-  actor->SetMapper(mapper);
+  active_mesh_actor->SetMapper(mapper);
 
   renderer = vtkSmartPointer<vtkRenderer>::New();
 
   renderer->SetBackground(1, 1, 1);
-  renderer->AddActor(actor);
+  renderer->AddActor(active_mesh_actor);
   renderer->AddActor(active_plane_actor);
 
   vtk_window->GetRenderWindow()->AddRenderer(renderer);
@@ -176,7 +176,37 @@ void MainWindow::handle_reject_slice() {
   vtk_window->update();
 }
 
-void MainWindow::update_active_mesh(const gca::triangular_mesh& m) {
+void MainWindow::update_active_mesh(const gca::triangular_mesh& new_mesh) {
+
+  active_mesh = new_mesh;
+
+  slice_planes = possible_slice_planes(active_mesh);
+
+  DBG_ASSERT(slice_planes.size() > 0);
+
+  active_plane = slice_planes.back();
+  slice_planes.pop_back();
+
+  renderer->RemoveActor(active_plane_actor);
+  active_plane_actor = plane_actor(vtk_plane(active_plane));
+  renderer->AddActor(active_plane_actor);
+
+  active_mesh_polydata = polydata_for_trimesh(active_mesh);
+  color_polydata(active_mesh_polydata, 0, 255, 0);
+
+  renderer->RemoveActor(active_mesh_actor);
+  
+  vtkSmartPointer<vtkPolyDataMapper> mapper = 
+    vtkSmartPointer<vtkPolyDataMapper>::New();
+  mapper->SetInputData(active_mesh_polydata);
+
+  active_mesh_actor = 
+    vtkSmartPointer<vtkActor>::New();
+  active_mesh_actor->SetMapper(mapper);
+
+  
+  renderer->AddActor(active_mesh_actor);
+
 }
 
 MainWindow::~MainWindow()
