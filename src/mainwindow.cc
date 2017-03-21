@@ -264,11 +264,25 @@ void MainWindow::clear_active_fillet() {
   renderer->RemoveActor(active_fillet_actor);
 }
 
-void MainWindow::set_active_fillet(const gca::triangular_mesh& part,
-				   const std::vector<gca::shared_edge>& fillet) {
+void MainWindow::set_active_fillet(const active_fillet& af) {
+
+  update_active_mesh(af.part.part);
+  clear_active_plane();
+
   clear_active_fillet();
-  auto fillet_actor = actor_for_fillet(part, fillet);
+
+  active_fillet_part = af;
+
+  auto fillet_actor = actor_for_fillet(active_fillet_part.part.part,
+				       active_fillet_part.current_fillet());
   renderer->AddActor(fillet_actor);
+}
+
+active_fillet MainWindow::next_active_fillet() {
+  filletable_part next = in_progress_fillets.back();
+  in_progress_fillets.pop_back();
+
+  
 }
 
 void MainWindow::fillet_next_part() {
@@ -277,12 +291,8 @@ void MainWindow::fillet_next_part() {
     return;
   }
 
-  filletable_part next = in_progress_fillets.back();
-  in_progress_fillets.pop_back();
-
-  update_active_mesh(next.part);
-  clear_active_plane();
-  set_active_fillet(next.part, next.fillet_groups.front().possible_fillets.front());
+  active_fillet af = next_active_fillet();
+  set_active_fillet(af); //next.part, next.fillet_groups.front().possible_fillets.front());
 }
 
 std::vector<fillet_group> build_fillet_groups(const triangular_mesh& m) {

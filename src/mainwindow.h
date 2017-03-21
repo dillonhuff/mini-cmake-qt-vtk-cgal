@@ -28,6 +28,15 @@ struct filletable_part {
   std::vector<fillet_group> fillet_groups;
 };
 
+struct active_fillet {
+  filletable_part part;
+  int fillet_group_index, fillet_index;
+
+  const std::vector<gca::shared_edge>& current_fillet() const {
+    return part.fillet_groups[fillet_group_index].possible_fillets[fillet_index];
+  }
+};
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -57,7 +66,7 @@ private:
 
   std::vector<gca::part_split> in_progress;
 
-  filletable_part active_fillet_part;
+  active_fillet active_fillet_part;
   int active_fillet_group_index, active_fillet_index;
   std::vector<filletable_part> in_progress_fillets;
   std::vector<filletable_part> finished_fillets;
@@ -83,6 +92,8 @@ private:
   void handle_reject_slice();
   void handle_set_done_slice();
 
+  void add_to_queues(const gca::part_split& part);
+
   // Commands for fillet mode
   void handle_accept_fillet();
   void handle_reject_fillet();
@@ -90,11 +101,12 @@ private:
 
   void switch_to_fillet_mode();
   void fillet_next_part();
-  void set_active_fillet(const gca::triangular_mesh& part,
-			 const std::vector<gca::shared_edge>& fillet);
+  void set_active_fillet(const active_fillet& af);
 
-  void add_to_queues(const gca::part_split& part);
+    // void set_active_fillet(const gca::triangular_mesh& part,
+    // 			 const std::vector<gca::shared_edge>& fillet);
 
+  active_fillet next_active_fillet();
   
 };
 
