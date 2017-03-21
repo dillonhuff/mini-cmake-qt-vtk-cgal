@@ -217,7 +217,23 @@ void MainWindow::slice_next_part() {
 
 }
 
+template<typename T>
+void delete_other_inds(std::vector<T>& elems, int ind) {
+  T elem = elems[ind];
+  elems.clear();
+  elems.push_back(elem);
+}
+
+//, active_fillet_part.fillet_index);//.erase(begin(current_group.possible_fillets) + active_fillet_part.fillet_index);
 void MainWindow::handle_accept_fillet() {
+  fillet_group& current_group =
+    active_fillet_part.part.fillet_groups[active_fillet_part.fillet_group_index];
+
+  delete_other_inds(current_group.possible_fillets, active_fillet_part.fillet_index);//.erase(begin(current_group.possible_fillets) + active_fillet_part.fillet_index);
+
+  clear_active_fillet();
+
+  fillet_next();
 }
 
 void MainWindow::handle_reject_fillet() {
@@ -237,8 +253,10 @@ void MainWindow::handle_set_done_fillet() {
 void MainWindow::handle_accept() {
   if (current_mode == SLICE_MODE) {
     handle_accept_slice();
+  } else if (current_mode == FILLET_MODE) {
+    handle_accept_fillet();
   } else {
-    DBG_ASSERT(false);
+    
   }
 
 }
@@ -290,7 +308,9 @@ void MainWindow::set_active_fillet(const active_fillet& af) {
 
 std::pair<int, int> find_next_fillet_choice(const active_fillet& af) {
   int fillet_group;
-  for (fillet_group = 0; fillet_group < af.part.fillet_groups.size(); fillet_group++) {
+  for (fillet_group = 0;
+       fillet_group < af.part.fillet_groups.size();
+       fillet_group++) {
 
     int num_possible_fillets =
       af.part.fillet_groups[fillet_group].possible_fillets.size();
