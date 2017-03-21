@@ -17,7 +17,7 @@
 #include "geometry/triangular_mesh.h"
 #include "part_slicing.h"
 
-enum edit_mode { FILLET_MODE, SLICE_MODE };
+enum edit_mode { FILLET_MODE, SLICE_MODE, COMPLETE_MODE };
 
 struct fillet_group {
   std::vector<std::vector<gca::shared_edge> > possible_fillets;
@@ -108,6 +108,9 @@ private:
     // 			 const std::vector<gca::shared_edge>& fillet);
 
   active_fillet next_active_fillet();
+
+  // Commands for complete mode
+  void set_complete_mode();
   
 };
 

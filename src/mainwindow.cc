@@ -226,6 +226,8 @@ void MainWindow::handle_reject_fillet() {
 
   current_group.possible_fillets.erase(begin(current_group.possible_fillets) + active_fillet_part.fillet_index);
 
+  clear_active_fillet();
+
   fillet_next();
 }
 
@@ -244,8 +246,10 @@ void MainWindow::handle_accept() {
 void MainWindow::handle_reject() {
   if (current_mode == SLICE_MODE) {
     handle_reject_slice();
-  } else {
+  } else if (current_mode == FILLET_MODE) {
     handle_reject_fillet();
+  } else {
+    return;
   }
   
 }
@@ -333,6 +337,7 @@ void MainWindow::fillet_next() {
 void MainWindow::fillet_next_part() {
   if (in_progress_fillets.size() == 0) {
     in_progress_heading->setText("NOTHING LEFT TO FILLET");
+    set_complete_mode();
     return;
   }
 
@@ -416,6 +421,20 @@ void MainWindow::add_to_queues(const part_split& part) {
     } else {
       in_progress_fillets.push_back(f);
     }
+  }
+}
+
+void MainWindow::set_complete_mode() {
+  current_mode = COMPLETE_MODE;
+
+  clear_active_plane();
+  clear_active_fillet();
+
+  in_progress_heading->setText("COMPLETE!!");
+
+  for (auto& p : finished_fillets) {
+    auto p_act = polydata_actor(polydata_for_trimesh(p.part));
+    renderer->AddActor(p_act);
   }
 }
 
