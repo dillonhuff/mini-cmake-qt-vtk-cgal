@@ -221,6 +221,12 @@ void MainWindow::handle_accept_fillet() {
 }
 
 void MainWindow::handle_reject_fillet() {
+  fillet_group& current_group =
+    active_fillet_part.part.fillet_groups[active_fillet_part.fillet_group_index];
+
+  current_group.possible_fillets.erase(begin(current_group.possible_fillets) + active_fillet_part.fillet_index);
+
+  fillet_next();
 }
 
 void MainWindow::handle_set_done_fillet() {
@@ -239,7 +245,7 @@ void MainWindow::handle_reject() {
   if (current_mode == SLICE_MODE) {
     handle_reject_slice();
   } else {
-    DBG_ASSERT(false);
+    handle_reject_fillet();
   }
   
 }
@@ -278,11 +284,50 @@ void MainWindow::set_active_fillet(const active_fillet& af) {
   renderer->AddActor(fillet_actor);
 }
 
+std::pair<int, int> find_next_fillet_choice(const active_fillet& af) {
+  int fillet_group;
+  for (fillet_group = 0; fillet_group < af.part.fillet_groups.size(); fillet_group++) {
+
+    int num_possible_fillets =
+      af.part.fillet_groups[fillet_group].possible_fillets.size();
+    if (num_possible_fillets > 1) {
+      return std::make_pair(fillet_group, 0);
+    }
+
+  }
+
+
+  return std::make_pair(-1, -1);
+}
+
 active_fillet MainWindow::next_active_fillet() {
   filletable_part next = in_progress_fillets.back();
   in_progress_fillets.pop_back();
 
-  
+  active_fillet af{next, -1, -1};
+
+  std::pair<int, int> next_fillets = find_next_fillet_choice(af);
+
+  DBG_ASSERT(next_fillets.first != -1);
+  DBG_ASSERT(next_fillets.second != -1);
+
+  af.fillet_group_index = next_fillets.first;
+  af.fillet_index = next_fillets.second;
+
+  return af;
+}
+
+void MainWindow::fillet_next() {
+  std::pair<int, int> next_fillets = find_next_fillet_choice(active_fillet_part);
+
+  if (next_fillets.first == -1) {
+    fillet_next_part();
+    return;
+  }
+
+  active_fillet_part.fillet_group_index = next_fillets.first;
+  active_fillet_part.fillet_index = next_fillets.second;
+  set_active_fillet(active_fillet_part);
 }
 
 void MainWindow::fillet_next_part() {

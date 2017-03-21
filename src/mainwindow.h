@@ -102,6 +102,7 @@ private:
   void switch_to_fillet_mode();
   void fillet_next_part();
   void set_active_fillet(const active_fillet& af);
+  void fillet_next();
 
     // void set_active_fillet(const gca::triangular_mesh& part,
     // 			 const std::vector<gca::shared_edge>& fillet);
