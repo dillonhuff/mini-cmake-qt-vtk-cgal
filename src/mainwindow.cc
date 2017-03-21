@@ -60,11 +60,11 @@ MainWindow::MainWindow(QWidget *parent)
   connect(reject_button, SIGNAL (released()), this, SLOT (handle_reject()));
   connect(set_done_button, SIGNAL (released()), this, SLOT (handle_set_done()));
 
-  active_mesh =
-    parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/artusitestp1 - Part 1.stl", 0.0001); //parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/caliperbedlevelingi3v2_fixed - Part 1.stl", 0.0001);
-  
   // active_mesh =
-  //   parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/caliperbedlevelingi3v2_fixed - Part 1.stl", 0.0001);
+  //   parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/artusitestp1 - Part 1.stl", 0.0001);
+  
+  active_mesh =
+    parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/caliperbedlevelingi3v2_fixed - Part 1.stl", 0.0001);
 
   //parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
 
@@ -309,9 +309,10 @@ void MainWindow::set_active_fillet(const active_fillet& af) {
 
   active_fillet_part = af;
 
-  auto fillet_actor = actor_for_fillet(active_fillet_part.part.part,
-				       active_fillet_part.current_fillet());
-  renderer->AddActor(fillet_actor);
+  active_fillet_actor = actor_for_fillet(active_fillet_part.part.part,
+					 active_fillet_part.current_fillet());
+
+  renderer->AddActor(active_fillet_actor);
 }
 
 std::pair<int, int> find_next_fillet_choice(const active_fillet& af) {
