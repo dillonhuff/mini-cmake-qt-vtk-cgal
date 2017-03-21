@@ -19,9 +19,13 @@
 
 enum edit_mode { FILLET_MODE, SLICE_MODE };
 
+struct fillet_group {
+  std::vector<std::vector<gca::shared_edge> > possible_fillets;
+};
+
 struct filletable_part {
   gca::triangular_mesh part;
-  
+  std::vector<fillet_group> fillet_groups;
 };
 
 class MainWindow : public QMainWindow {
@@ -44,6 +48,7 @@ private:
   vtkSmartPointer<vtkRenderer> renderer;
   vtkSmartPointer<vtkActor> active_plane_actor;
   vtkSmartPointer<vtkActor> active_mesh_actor;
+  vtkSmartPointer<vtkActor> active_fillet_actor;
   vtkSmartPointer<vtkPolyData> active_mesh_polydata;
 
   std::vector<gca::plane> slice_planes;
@@ -67,6 +72,7 @@ private:
   void update_active_mesh(const gca::triangular_mesh& m);
   void update_active_plane(const gca::plane p);
   void clear_active_plane();
+  void clear_active_fillet();
 
   void slice_next_part();
 
@@ -82,6 +88,11 @@ private:
 
   void switch_to_fillet_mode();
   void fillet_next_part();
+  void set_active_fillet(const gca::triangular_mesh& part,
+			 const std::vector<gca::shared_edge>& fillet);
+
+  void add_to_queues(const gca::part_split& part);
+
   
 };
 

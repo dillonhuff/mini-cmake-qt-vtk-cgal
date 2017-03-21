@@ -9,3 +9,4 @@ example_automoc.cpp
 moc_mainwindow.cpp
 ui_mainwindow.h
 cmake/
+*~

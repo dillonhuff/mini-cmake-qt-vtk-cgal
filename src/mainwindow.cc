@@ -108,8 +108,9 @@ void MainWindow::handle_accept_slice() {
   part_split pos_split = build_part_split(clipped_nef_pos);
   part_split neg_split = build_part_split(clipped_nef_neg);
 
-  // if (pos_split.deep_features.size() > 0) {
-  //   auto new_meshes = nef_polyhedron_to_trimeshes(clipped_nef_pos);
+  add_to_queues(pos_split);
+  add_to_queues(neg_split);
+  
 
   bool pos_finished = pos_split.deep_features.size() == 0;
   bool neg_finished = neg_split.deep_features.size() == 0;
@@ -255,9 +256,104 @@ void MainWindow::handle_set_done() {
 void MainWindow::switch_to_fillet_mode() {
   current_mode = FILLET_MODE;
   clear_active_plane();
+  accept_button->setText("Accept fillet");
+  reject_button->setText("Reject fillet");
+}
+
+void MainWindow::clear_active_fillet() {
+  renderer->RemoveActor(active_fillet_actor);
+}
+
+void MainWindow::set_active_fillet(const gca::triangular_mesh& part,
+				   const std::vector<gca::shared_edge>& fillet) {
+  clear_active_fillet();
+  auto fillet_actor = actor_for_fillet(part, fillet);
+  renderer->AddActor(fillet_actor);
 }
 
 void MainWindow::fillet_next_part() {
+  if (in_progress_fillets.size() == 0) {
+    in_progress_heading->setText("NOTHING LEFT TO FILLET");
+    return;
+  }
+
+  filletable_part next = in_progress_fillets.back();
+  in_progress_fillets.pop_back();
+
+  update_active_mesh(next.part);
+  clear_active_plane();
+  set_active_fillet(next.part, next.fillet_groups.front().possible_fillets.front());
+}
+
+std::vector<fillet_group> build_fillet_groups(const triangular_mesh& m) {
+  auto sfc = build_surface_milling_constraints(m);
+  vector<vector<surface> > corner_groups =
+    sfc.hard_corner_groups();
+
+  vector<surface> sfs = outer_surfaces(m);
+  DBG_ASSERT(sfs.size() > 0);
+  vector<plane> stock_planes = set_right_handed(max_area_basis(sfs));
+  vector<point> dirs;
+  for (auto& p : stock_planes) {
+    dirs.push_back(p.normal());
+    dirs.push_back(-1*p.normal());
+  }
+
+  vector<fillet_group> fillets;
+  for (auto cg : corner_groups) {
+
+    vector<vector<shared_edge> > possible_fillets;
+
+    for (auto access_dir : dirs) {
+
+      if (!is_centralized(cg)) {
+
+	if (all_surfaces_are_millable_from(access_dir, cg)) {
+	  vector<shared_edge> edges = edges_to_fillet(cg, m, access_dir);
+	  possible_fillets.push_back(edges);
+	  //vtk_debug_shared_edges(edges, m);
+	}
+      }
+
+    }
+
+    fillets.push_back({possible_fillets});
+
+  }
+
+  return fillets;
+}
+
+std::vector<filletable_part> build_filletables(const part_split& part) {
+  vector<filletable_part> filletable;
+  for (auto& m : nef_polyhedron_to_trimeshes(part.nef)) {
+    std::vector<fillet_group> fillets = build_fillet_groups(m);
+    filletable.push_back({m, fillets});
+  }
+
+  return filletable;
+}
+
+bool is_finished(const filletable_part& part) {
+  return false;
+}
+
+void MainWindow::add_to_queues(const part_split& part) {
+  if (part.deep_features.size() > 0) {
+    in_progress.push_back(part);
+    return;
+  }
+
+  vector<filletable_part> filletables =
+    build_filletables(part);
+
+  for (auto& f : filletables) {
+    if (is_finished(f)) {
+      finished_fillets.push_back(f);
+    } else {
+      in_progress_fillets.push_back(f);
+    }
+  }
 }
 
 MainWindow::~MainWindow()

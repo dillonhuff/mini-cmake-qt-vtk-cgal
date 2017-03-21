@@ -70,4 +70,12 @@ namespace gca {
   vector<vector<part_split> >
   splits_of_one_subpart(const std::vector<part_split>& nps);
 
+  bool all_surfaces_are_millable_from(const point dir,
+				      const std::vector<surface>& sfs);
+  
+
+  vtkSmartPointer<vtkActor>
+  actor_for_fillet(const triangular_mesh& m,
+		   const std::vector<shared_edge>& edges);
+  
 }

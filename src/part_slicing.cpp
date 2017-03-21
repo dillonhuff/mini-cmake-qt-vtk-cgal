@@ -90,9 +90,11 @@ namespace gca {
 
     return find_access_surfaces(cg, norms);
   }
-  
-  void vtk_debug_shared_edges(const std::vector<shared_edge>& edges,
-			      const triangular_mesh& m) {
+
+  vtkSmartPointer<vtkActor>
+  actor_for_fillet(const triangular_mesh& m,
+		   const std::vector<shared_edge>& edges) {
+
     vector<polyline> lines;
     for (auto s : edges) {
       point p1 = m.vertex(s.e.l);
@@ -101,9 +103,16 @@ namespace gca {
     }
 
     auto lines_pd = polydata_for_polylines(lines);
-    color_polydata(lines_pd, 0, 255, 0);
+    color_polydata(lines_pd, 255, 0, 0);
     auto lines_act = polydata_actor(lines_pd);
     lines_act->GetProperty()->SetLineWidth(10);
+
+    return lines_act;
+  }
+
+  void vtk_debug_shared_edges(const std::vector<shared_edge>& edges,
+			      const triangular_mesh& m) {
+    auto lines_act = actor_for_fillet(m, edges);
 
     auto mesh_pd = polydata_for_trimesh(m);
     color_polydata(mesh_pd, 255, 0, 0);
