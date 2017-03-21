@@ -83,6 +83,7 @@ private:
   void update_active_mesh(const gca::triangular_mesh& m);
   void update_active_plane(const gca::plane p);
   void clear_active_plane();
+  void clear_active_mesh();
   void clear_active_fillet();
 
   void slice_next_part();

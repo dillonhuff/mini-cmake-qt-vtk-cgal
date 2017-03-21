@@ -300,6 +300,10 @@ void MainWindow::clear_active_fillet() {
   renderer->RemoveActor(active_fillet_actor);
 }
 
+void MainWindow::clear_active_mesh() {
+  renderer->RemoveActor(active_mesh_actor);
+}
+
 void MainWindow::set_active_fillet(const active_fillet& af) {
 
   update_active_mesh(af.part.part);
@@ -354,6 +358,7 @@ void MainWindow::fillet_next() {
   std::pair<int, int> next_fillets = find_next_fillet_choice(active_fillet_part);
 
   if (next_fillets.first == -1) {
+    finished_fillets.push_back(active_fillet_part.part);
     fillet_next_part();
     return;
   }
@@ -463,11 +468,17 @@ void MainWindow::set_complete_mode() {
 
   clear_active_plane();
   clear_active_fillet();
+  clear_active_mesh();
 
   in_progress_heading->setText("COMPLETE!!");
 
+  color white(255, 255, 255);
+
   for (auto& p : finished_fillets) {
-    auto p_act = polydata_actor(polydata_for_trimesh(p.part));
+    auto p_data = polydata_for_trimesh(p.part);
+    auto rc = random_color(white);
+    color_polydata(p_data, rc.red(), rc.green(), rc.blue());
+    auto p_act = polydata_actor(p_data);
     renderer->AddActor(p_act);
   }
 }
