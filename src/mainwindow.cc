@@ -335,7 +335,15 @@ std::vector<filletable_part> build_filletables(const part_split& part) {
 }
 
 bool is_finished(const filletable_part& part) {
-  return false;
+  if (part.fillet_groups.size() == 0) { return true; }
+
+  for (auto& f : part.fillet_groups) {
+    if (f.possible_fillets.size() > 1) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void MainWindow::add_to_queues(const part_split& part) {

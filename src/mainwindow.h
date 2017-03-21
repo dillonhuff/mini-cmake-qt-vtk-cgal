@@ -57,6 +57,8 @@ private:
 
   std::vector<gca::part_split> in_progress;
 
+  filletable_part active_fillet_part;
+  int active_fillet_group_index, active_fillet_index;
   std::vector<filletable_part> in_progress_fillets;
   std::vector<filletable_part> finished_fillets;
 
