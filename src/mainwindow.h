@@ -94,6 +94,8 @@ private:
 
   void add_to_queues(const gca::part_split& part);
 
+  void add_to_filletables(const gca::part_split& part);
+
   // Commands for fillet mode
   void handle_accept_fillet();
   void handle_reject_fillet();

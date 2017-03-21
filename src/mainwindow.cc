@@ -61,7 +61,10 @@ MainWindow::MainWindow(QWidget *parent)
   connect(set_done_button, SIGNAL (released()), this, SLOT (handle_set_done()));
 
   active_mesh =
-    parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/caliperbedlevelingi3v2_fixed - Part 1.stl", 0.0001);
+    parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/artusitestp1 - Part 1.stl", 0.0001); //parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/caliperbedlevelingi3v2_fixed - Part 1.stl", 0.0001);
+  
+  // active_mesh =
+  //   parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/caliperbedlevelingi3v2_fixed - Part 1.stl", 0.0001);
 
   //parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
 
@@ -189,14 +192,20 @@ void MainWindow::update_active_mesh(const gca::triangular_mesh& new_mesh) {
 void MainWindow::handle_set_done_slice() {
 
   if (in_progress.size() == 0) {
-    in_progress_heading->setText("ALL DONE");
+    auto part_nef = trimesh_to_nef_polyhedron(active_mesh);
+    part_split p_split = build_part_split(part_nef);
+
+    add_to_filletables(p_split);    
+    switch_to_fillet_mode();
+    fillet_next_part();
     return;
   }
 
-  auto next_mesh = nef_to_single_trimesh(in_progress.back().nef);
-  in_progress.pop_back();
+  // auto next_mesh = nef_to_single_trimesh(in_progress.back().nef);
+  // in_progress.pop_back();
 
-  update_active_mesh(next_mesh);
+  slice_next_part();
+  //update_active_mesh(next_mesh);
 }
 
 void MainWindow::slice_next_part() {
@@ -224,12 +233,11 @@ void delete_other_inds(std::vector<T>& elems, int ind) {
   elems.push_back(elem);
 }
 
-//, active_fillet_part.fillet_index);//.erase(begin(current_group.possible_fillets) + active_fillet_part.fillet_index);
 void MainWindow::handle_accept_fillet() {
   fillet_group& current_group =
     active_fillet_part.part.fillet_groups[active_fillet_part.fillet_group_index];
 
-  delete_other_inds(current_group.possible_fillets, active_fillet_part.fillet_index);//.erase(begin(current_group.possible_fillets) + active_fillet_part.fillet_index);
+  delete_other_inds(current_group.possible_fillets, active_fillet_part.fillet_index);
 
   clear_active_fillet();
 
@@ -426,12 +434,7 @@ bool is_finished(const filletable_part& part) {
   return true;
 }
 
-void MainWindow::add_to_queues(const part_split& part) {
-  if (part.deep_features.size() > 0) {
-    in_progress.push_back(part);
-    return;
-  }
-
+void MainWindow::add_to_filletables(const part_split& part) {
   vector<filletable_part> filletables =
     build_filletables(part);
 
@@ -442,6 +445,16 @@ void MainWindow::add_to_queues(const part_split& part) {
       in_progress_fillets.push_back(f);
     }
   }
+}
+
+void MainWindow::add_to_queues(const part_split& part) {
+  if (part.deep_features.size() > 0) {
+    in_progress.push_back(part);
+    return;
+  }
+
+  add_to_filletables(part);
+
 }
 
 void MainWindow::set_complete_mode() {
