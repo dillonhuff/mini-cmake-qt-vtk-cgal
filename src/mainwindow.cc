@@ -155,12 +155,52 @@ void vtk_debug_nef(const Nef_polyhedron& n) {
   vtk_debug_meshes(nef_polyhedron_to_trimeshes(n));
 }
 
+std::vector<index_t> coplanar_facets(const plane p,
+				     const triangular_mesh& m) {
+  vector<index_t> inds;
+  for (auto& i : m.face_indexes()) {
+    triangle t = m.face_triangle(i);
+    point pt = t.v1;
+    point diff = pt - p.pt();
+    if (angle_eps(p.normal(), diff, 90.0, 1.0) &&
+	(angle_eps(normal(t), p.normal(), 0.0, 1.0) ||
+	 angle_eps(normal(t), p.normal(), 180.0, 1.0))) {
+      inds.push_back(i);
+    }
+  }
+  return inds;
+}
+
+point
+hole_position(const Nef_polyhedron& clipped_pos,
+	      const Nef_polyhedron& clipped_neg,
+	      const plane active_plane) {
+  auto pos_mesh = nef_to_single_trimesh(clipped_pos);
+  auto neg_mesh = nef_to_single_trimesh(clipped_neg);
+
+  // Q: How do you merge surfaces? Which surfaces need to
+  // be joined by bolts?
+
+  vector<index_t> pos_plane_tris =
+    coplanar_facets(active_plane, pos_mesh);
+
+  vtk_debug_highlight_inds(pos_plane_tris, pos_mesh);
+
+  vector<index_t> neg_plane_tris =
+    coplanar_facets(active_plane, neg_mesh);
+
+  vtk_debug_highlight_inds(neg_plane_tris, neg_mesh);
+
+  return point(0, 0, 0);
+}
+
 std::pair<Nef_polyhedron, Nef_polyhedron>
 insert_attachment_holes(const Nef_polyhedron& clipped_pos,
 			const Nef_polyhedron& clipped_neg,
 			const plane active_plane) {
+  point pos = hole_position(clipped_pos, clipped_neg, active_plane);
   triangular_mesh hole_mesh =
-    build_hole_mesh(point(0, 0, 0), -1*active_plane.normal(), 10.0, 0.1);
+    build_hole_mesh(pos, -1*active_plane.normal(), 10.0, 0.1);
 
   vtk_debug_mesh(hole_mesh);
 
