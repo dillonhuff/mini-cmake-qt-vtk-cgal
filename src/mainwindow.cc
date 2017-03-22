@@ -151,17 +151,24 @@ triangular_mesh build_hole_mesh(const point center,
   return extrude(circle, depth*normal);
 }
 
+void vtk_debug_nef(const Nef_polyhedron& n) {
+  vtk_debug_meshes(nef_polyhedron_to_trimeshes(n));
+}
+
 std::pair<Nef_polyhedron, Nef_polyhedron>
 insert_attachment_holes(const Nef_polyhedron& clipped_pos,
 			const Nef_polyhedron& clipped_neg,
 			const plane active_plane) {
   triangular_mesh hole_mesh =
-    build_hole_mesh(point(0, 0, 0), active_plane.normal(), 10.0, 1.0);
+    build_hole_mesh(point(0, 0, 0), -1*active_plane.normal(), 10.0, 1.0);
 
   vtk_debug_mesh(hole_mesh);
 
   auto cp = clipped_pos - trimesh_to_nef_polyhedron(hole_mesh);
+  vtk_debug_nef(cp);
   auto cn = clipped_neg - trimesh_to_nef_polyhedron(hole_mesh);
+  vtk_debug_nef(cn);
+
   return make_pair(cp, cn);
 }
 
