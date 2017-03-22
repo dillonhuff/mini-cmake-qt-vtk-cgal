@@ -3,6 +3,7 @@
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 
+#include "geometry/extrusion.h"
 #include "geometry/vtk_utils.h"
 #include "geometry/vtk_debug.h"
 #include "process_planning/surface_planning.h"
@@ -100,10 +101,78 @@ MainWindow::MainWindow(QWidget *parent)
 
 }
 
+polygon_3 build_2D_circle(const double diameter) {
+  // typedef boost::geometry::model::d2::point_xy<double> point;
+  // typedef boost::geometry::model::polygon<point> polygon;
+
+  // Declare the point_circle strategy
+  boost::geometry::strategy::buffer::point_circle point_strategy(360);
+
+  // Declare other strategies
+  boost::geometry::strategy::buffer::distance_symmetric<double> distance_strategy(0.7);
+  boost::geometry::strategy::buffer::join_round join_strategy;
+  boost::geometry::strategy::buffer::end_round end_strategy;
+  boost::geometry::strategy::buffer::side_straight side_strategy;
+
+  // Declare/fill of a multi point
+  boost::geometry::model::multi_point<boost_point_2> mp;
+  boost::geometry::read_wkt("MULTIPOINT((0 0))", mp); //,(3 4),(4 4),(7 3))", mp);
+
+  // Create the buffer of a multi point
+  boost_multipoly_2 result;
+  boost::geometry::buffer(mp, result,
+			  distance_strategy, side_strategy,
+			  join_strategy, end_strategy, point_strategy);
+
+  DBG_ASSERT(result.size() == 1);
+
+  boost_poly_2 front = result.front();
+
+  return to_polygon_3(0, front);
+}
+
+polygon_3 build_3D_circle(const point center,
+			  const double diameter,
+			  const point normal) {
+  const rotation r = rotate_from_to(point(0, 0, 1), normal);
+
+  polygon_3 circle = build_2D_circle(diameter);
+  circle = apply(r, circle);
+  circle = shift(center, circle);
+
+  return circle;
+}
+
+triangular_mesh build_hole_mesh(const point center,
+				const point normal,
+				const double depth,
+				const double diameter) {
+  polygon_3 circle = build_3D_circle(center, diameter, normal);
+  return extrude(circle, depth*normal);
+}
+
+std::pair<Nef_polyhedron, Nef_polyhedron>
+insert_attachment_holes(const Nef_polyhedron& clipped_pos,
+			const Nef_polyhedron& clipped_neg,
+			const plane active_plane) {
+  triangular_mesh hole_mesh =
+    build_hole_mesh(point(0, 0, 0), active_plane.normal(), 10.0, 1.0);
+
+  vtk_debug_mesh(hole_mesh);
+
+  auto cp = clipped_pos - trimesh_to_nef_polyhedron(hole_mesh);
+  auto cn = clipped_neg - trimesh_to_nef_polyhedron(hole_mesh);
+  return make_pair(cp, cn);
+}
+
 sliced_part cut_part_with_plane(const plane active_plane,
 				const Nef_polyhedron& part_nef) {
-  auto clipped_nef_pos = clip_nef(part_nef, active_plane.slide(0.0001));
-  auto clipped_nef_neg = clip_nef(part_nef, active_plane.flip().slide(0.0001));
+  auto clipped_pos = clip_nef(part_nef, active_plane.slide(0.0001));
+  auto clipped_neg = clip_nef(part_nef, active_plane.flip().slide(0.0001));
+
+  auto with_holes = insert_attachment_holes(clipped_pos, clipped_neg, active_plane);
+  auto clipped_nef_pos = with_holes.first;
+  auto clipped_nef_neg = with_holes.second;
 
   part_split pos_split = build_part_split(clipped_nef_pos);
   part_split neg_split = build_part_split(clipped_nef_neg);
