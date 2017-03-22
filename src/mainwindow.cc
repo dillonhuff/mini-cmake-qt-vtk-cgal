@@ -101,7 +101,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 }
 
-polygon_3 build_2D_circle(const double diameter) {
+polygon_3 build_2D_circle(const double radius) {
   // typedef boost::geometry::model::d2::point_xy<double> point;
   // typedef boost::geometry::model::polygon<point> polygon;
 
@@ -109,7 +109,7 @@ polygon_3 build_2D_circle(const double diameter) {
   boost::geometry::strategy::buffer::point_circle point_strategy(360);
 
   // Declare other strategies
-  boost::geometry::strategy::buffer::distance_symmetric<double> distance_strategy(0.7);
+  boost::geometry::strategy::buffer::distance_symmetric<double> distance_strategy(radius);
   boost::geometry::strategy::buffer::join_round join_strategy;
   boost::geometry::strategy::buffer::end_round end_strategy;
   boost::geometry::strategy::buffer::side_straight side_strategy;
@@ -132,11 +132,11 @@ polygon_3 build_2D_circle(const double diameter) {
 }
 
 polygon_3 build_3D_circle(const point center,
-			  const double diameter,
+			  const double radius,
 			  const point normal) {
   const rotation r = rotate_from_to(point(0, 0, 1), normal);
 
-  polygon_3 circle = build_2D_circle(diameter);
+  polygon_3 circle = build_2D_circle(radius);
   circle = apply(r, circle);
   circle = shift(center, circle);
 
@@ -146,8 +146,8 @@ polygon_3 build_3D_circle(const point center,
 triangular_mesh build_hole_mesh(const point center,
 				const point normal,
 				const double depth,
-				const double diameter) {
-  polygon_3 circle = build_3D_circle(center, diameter, normal);
+				const double radius) {
+  polygon_3 circle = build_3D_circle(center, radius, normal);
   return extrude(circle, depth*normal);
 }
 
@@ -160,7 +160,7 @@ insert_attachment_holes(const Nef_polyhedron& clipped_pos,
 			const Nef_polyhedron& clipped_neg,
 			const plane active_plane) {
   triangular_mesh hole_mesh =
-    build_hole_mesh(point(0, 0, 0), -1*active_plane.normal(), 10.0, 1.0);
+    build_hole_mesh(point(0, 0, 0), -1*active_plane.normal(), 10.0, 0.1);
 
   vtk_debug_mesh(hole_mesh);
 
