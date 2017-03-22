@@ -19,6 +19,11 @@
 
 enum edit_mode { FILLET_MODE, SLICE_MODE, COMPLETE_MODE };
 
+struct sliced_part {
+  gca::part_split pos_split;
+  gca::part_split neg_split;
+};
+
 struct fillet_group {
   std::vector<std::vector<gca::shared_edge> > possible_fillets;
 };

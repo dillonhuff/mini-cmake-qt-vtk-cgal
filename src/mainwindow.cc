@@ -100,16 +100,24 @@ MainWindow::MainWindow(QWidget *parent)
 
 }
 
-void MainWindow::handle_accept_slice() {
-  in_progress_heading->setText("OH YEAH!!!");
-
-  auto part_nef = trimesh_to_nef_polyhedron(active_mesh);
-
+sliced_part cut_part_with_plane(const plane active_plane,
+				const Nef_polyhedron& part_nef) {
   auto clipped_nef_pos = clip_nef(part_nef, active_plane.slide(0.0001));
   auto clipped_nef_neg = clip_nef(part_nef, active_plane.flip().slide(0.0001));
 
   part_split pos_split = build_part_split(clipped_nef_pos);
   part_split neg_split = build_part_split(clipped_nef_neg);
+
+  return sliced_part{pos_split, neg_split};
+}
+
+void MainWindow::handle_accept_slice() {
+  auto part_nef = trimesh_to_nef_polyhedron(active_mesh);
+
+  sliced_part sliced = cut_part_with_plane(active_plane, part_nef);
+
+  part_split pos_split = sliced.pos_split;
+  part_split neg_split = sliced.neg_split;
 
   add_to_queues(pos_split);
   add_to_queues(neg_split);
