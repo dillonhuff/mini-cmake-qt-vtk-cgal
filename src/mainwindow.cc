@@ -171,7 +171,21 @@ std::vector<index_t> coplanar_facets(const plane p,
   return inds;
 }
 
-point
+std::vector<surface> coplanar_surfaces(const plane p,
+				       const triangular_mesh& m) {
+  vector<index_t> pos_plane_tris =
+    coplanar_facets(p, m);
+
+  vector<vector<index_t> > inds =
+    connect_regions(pos_plane_tris, m);
+
+  vector<surface> surfs =
+    inds_to_surfaces(inds, m);
+
+  return surfs;
+}
+
+vector<point>
 hole_position(const Nef_polyhedron& clipped_pos,
 	      const Nef_polyhedron& clipped_neg,
 	      const plane active_plane) {
@@ -181,14 +195,7 @@ hole_position(const Nef_polyhedron& clipped_pos,
   // Q: How do you merge surfaces? Which surfaces need to
   // be joined by bolts?
 
-  vector<index_t> pos_plane_tris =
-    coplanar_facets(active_plane, pos_mesh);
-
-  vector<vector<index_t> > inds =
-    connect_regions(pos_plane_tris, pos_mesh);
-
-  vector<surface> surfs =
-    inds_to_surfaces(inds, pos_mesh);
+  vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
 
   // Assert to check that we are in the limited special case
   // I am planning for
@@ -198,7 +205,7 @@ hole_position(const Nef_polyhedron& clipped_pos,
 
   triangle t = s.face_triangle(s.front());
 
-  return t.centroid();
+  return {t.centroid()};
 
   // for (auto& s : surfs) {
   //   cout << "POS SURFACE" << endl;
@@ -207,14 +214,16 @@ hole_position(const Nef_polyhedron& clipped_pos,
 
   //vtk_debug_highlight_inds(pos_plane_tris, pos_mesh);
 
-  vector<index_t> neg_plane_tris =
-    coplanar_facets(active_plane, neg_mesh);
+  // vector<index_t> neg_plane_tris =
+  //   coplanar_facets(active_plane, neg_mesh);
 
-  vector<vector<index_t> > neg_inds =
-    connect_regions(neg_plane_tris, neg_mesh);
+  // vector<vector<index_t> > neg_inds =
+  //   connect_regions(neg_plane_tris, neg_mesh);
 
-  vector<surface> neg_surfs =
-    inds_to_surfaces(neg_inds, neg_mesh);
+  // vector<surface> neg_surfs =
+  //   inds_to_surfaces(neg_inds, neg_mesh);
+
+  vector<surface> neg_surfs = coplanar_surfaces(active_plane, neg_mesh);
 
   DBG_ASSERT(surfs.size() == 2);
 
@@ -225,24 +234,33 @@ hole_position(const Nef_polyhedron& clipped_pos,
   
   //vtk_debug_highlight_inds(neg_plane_tris, neg_mesh);
 
-  return point(0, 0, 0);
+  //return point(0, 0, 0);
+
+  DBG_ASSERT(false);
 }
 
 std::pair<Nef_polyhedron, Nef_polyhedron>
 insert_attachment_holes(const Nef_polyhedron& clipped_pos,
 			const Nef_polyhedron& clipped_neg,
 			const plane active_plane) {
-  point pos = hole_position(clipped_pos, clipped_neg, active_plane);
-  triangular_mesh hole_mesh =
-    build_hole_mesh(pos, -1*active_plane.normal(), 10.0, 0.05);
+  vector<point> positions = hole_position(clipped_pos, clipped_neg, active_plane);
 
-  vtk_debug_mesh(hole_mesh);
+  //vtk_debug_mesh(hole_mesh);
 
-  auto cp = clipped_pos - trimesh_to_nef_polyhedron(hole_mesh);
+  Nef_polyhedron cp = clipped_pos;
+  Nef_polyhedron cn = clipped_neg;
+  for (auto pt : positions) {
+    triangular_mesh hole_mesh =
+      build_hole_mesh(pt, -1*active_plane.normal(), 10.0, 0.05);
+
+    auto hole_nef = trimesh_to_nef_polyhedron(hole_mesh);
+    cp = cp - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
+    cn = cn - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
+  }
+
   vtk_debug_nef(cp);
-  auto cn = clipped_neg - trimesh_to_nef_polyhedron(hole_mesh);
   vtk_debug_nef(cn);
-
+  
   return make_pair(cp, cn);
 }
 
