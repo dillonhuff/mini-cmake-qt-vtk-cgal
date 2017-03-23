@@ -251,6 +251,10 @@ std::vector<counterbore_params>
 match_polygons(const point counterbore_dir,
 	       const std::vector<polygon_3>& pos_polys,
 	       const std::vector<polygon_3>& neg_polys) {
+
+  auto inters = polygon_intersection(pos_polys, neg_polys);
+
+  vtk_debug_polygons(inters);
   return {};
 }
 
