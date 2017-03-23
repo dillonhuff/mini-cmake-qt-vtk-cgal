@@ -188,6 +188,11 @@ std::vector<surface> coplanar_surfaces(const plane p,
 struct counterbore_params {
   point counter_dir;
   point position;
+  double counterbore_offset;
+
+  point counterbore_start() const {
+    return position + counterbore_offset*counter_dir;
+  }
 };
 
 std::vector<counterbore_params>
@@ -202,7 +207,9 @@ surface_hole_positions(const point dir, const surface& s) {
   point c2 = max_e(centroids, [c1](const point pt) {
       return (c1 - pt).len();
     });
-  return {{dir, c1}, {dir, c2}};
+
+  double offset = 0.01;
+  return {{dir, c1, offset}, {dir, c2, offset}};
 }
 
 point
@@ -298,7 +305,7 @@ insert_attachment_holes(const Nef_polyhedron& clipped_pos,
   Nef_polyhedron cn = clipped_neg;
   for (auto cb : positions) {
     triangular_mesh hole_mesh =
-      build_hole_mesh(cb.position, cb.counter_dir, 10.0, 0.05);
+      build_hole_mesh(cb.counterbore_start(), cb.counter_dir, 10.0, 0.05);
 
     auto hole_nef = trimesh_to_nef_polyhedron(hole_mesh);
     cp = cp - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
