@@ -64,10 +64,10 @@ MainWindow::MainWindow(QWidget *parent)
   // active_mesh =
   //   parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/artusitestp1 - Part 1.stl", 0.0001);
   
-  active_mesh =
-    parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/caliperbedlevelingi3v2_fixed - Part 1.stl", 0.0001);
+  // active_mesh =
+  //   parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/caliperbedlevelingi3v2_fixed - Part 1.stl", 0.0001);
 
-  //parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
+  active_mesh = parse_stl("/Users/dillon/CppWorkspace/gca/test/stl-files/onshape_parts/SmallReverseCameraMount - Part 1.stl", 0.0001);
 
   slice_planes = possible_slice_planes(active_mesh);
 
@@ -187,8 +187,17 @@ std::vector<surface> coplanar_surfaces(const plane p,
 
 std::vector<point>
 surface_hole_positions(const surface& s) {
-  triangle t = s.face_triangle(s.front());
-  return {t.centroid()};
+  vector<point> centroids;
+  for (auto i : s.index_list()) {
+    triangle t = s.face_triangle(i);
+    centroids.push_back(t.centroid());
+  }
+
+  point c1 = centroids.front();
+  point c2 = max_e(centroids, [c1](const point pt) {
+      return (c1 - pt).len();
+    });
+  return {c1, c2};
 }
 
 std::vector<point>
