@@ -184,12 +184,12 @@ hole_position(const Nef_polyhedron& clipped_pos,
   vector<index_t> pos_plane_tris =
     coplanar_facets(active_plane, pos_mesh);
 
-  vtk_debug_highlight_inds(pos_plane_tris, pos_mesh);
+  //vtk_debug_highlight_inds(pos_plane_tris, pos_mesh);
 
   vector<index_t> neg_plane_tris =
     coplanar_facets(active_plane, neg_mesh);
 
-  vtk_debug_highlight_inds(neg_plane_tris, neg_mesh);
+  //vtk_debug_highlight_inds(neg_plane_tris, neg_mesh);
 
   return point(0, 0, 0);
 }
@@ -202,12 +202,12 @@ insert_attachment_holes(const Nef_polyhedron& clipped_pos,
   triangular_mesh hole_mesh =
     build_hole_mesh(pos, -1*active_plane.normal(), 10.0, 0.1);
 
-  vtk_debug_mesh(hole_mesh);
+  //vtk_debug_mesh(hole_mesh);
 
   auto cp = clipped_pos - trimesh_to_nef_polyhedron(hole_mesh);
-  vtk_debug_nef(cp);
+  //vtk_debug_nef(cp);
   auto cn = clipped_neg - trimesh_to_nef_polyhedron(hole_mesh);
-  vtk_debug_nef(cn);
+  //vtk_debug_nef(cn);
 
   return make_pair(cp, cn);
 }
@@ -315,11 +315,11 @@ void MainWindow::update_active_mesh(const gca::triangular_mesh& new_mesh) {
 
 void MainWindow::handle_set_done_slice() {
 
+  auto part_nef = trimesh_to_nef_polyhedron(active_mesh);
+  part_split p_split = build_part_split(part_nef);
+  add_to_filletables(p_split);    
+  
   if (in_progress.size() == 0) {
-    auto part_nef = trimesh_to_nef_polyhedron(active_mesh);
-    part_split p_split = build_part_split(part_nef);
-
-    add_to_filletables(p_split);    
     switch_to_fillet_mode();
     fillet_next_part();
     return;
