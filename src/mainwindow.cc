@@ -200,21 +200,61 @@ surface_hole_positions(const surface& s) {
   return {c1, c2};
 }
 
+Nef_polyhedron
+find_counterbore_side(const Nef_polyhedron& clipped_pos,
+		      const Nef_polyhedron& clipped_neg,
+		      const plane active_plane) {
+  auto pos_meshes = nef_polyhedron_to_trimeshes(clipped_pos);
+  double max_pos_diam = -1;
+  for (auto& pos_mesh : pos_meshes) {
+    double diam = diameter(active_plane.normal(), pos_mesh);
+    if (diam > max_pos_diam) {
+      max_pos_diam = diam;
+    }
+  }
+
+  auto neg_meshes = nef_polyhedron_to_trimeshes(clipped_neg);
+  double max_neg_diam = -1;
+  for (auto& neg_mesh : neg_meshes) {
+    double diam = diameter(active_plane.normal(), neg_mesh);
+    if (diam > max_neg_diam) {
+      max_neg_diam = diam;
+    }
+  }
+
+  if (max_pos_diam > max_neg_diam) {
+    return clipped_neg;
+  }
+
+  return clipped_pos;
+  
+}
+  
+
 std::vector<point>
 hole_position(const Nef_polyhedron& clipped_pos,
 	      const Nef_polyhedron& clipped_neg,
 	      const plane active_plane) {
-  auto pos_mesh = nef_to_single_trimesh(clipped_pos);
-  auto neg_mesh = nef_to_single_trimesh(clipped_neg);
+  Nef_polyhedron counterbore_mesh =
+    find_counterbore_side(clipped_pos, clipped_neg, active_plane);
+
+  cout << "COUNTERBORE MESH" << endl;
+  vtk_debug_nef(counterbore_mesh);
+
+  auto pos_meshes = nef_polyhedron_to_trimeshes(clipped_pos);
+  //auto neg_mesh = nef_to_single_trimesh(clipped_neg);
 
   // Q: How do you merge surfaces? Which surfaces need to
   // be joined by bolts?
 
-  vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
-
   vector<point> locs;
-  for (auto& s : surfs) {
-    concat(locs, surface_hole_positions(s));
+  
+  for (auto& pos_mesh : pos_meshes) {
+    vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
+
+    for (auto& s : surfs) {
+      concat(locs, surface_hole_positions(s));
+    }
   }
 
   // vector<point> locs;
@@ -225,9 +265,9 @@ hole_position(const Nef_polyhedron& clipped_pos,
   
   return locs;
 
-  vector<surface> neg_surfs = coplanar_surfaces(active_plane, neg_mesh);
+  // vector<surface> neg_surfs = coplanar_surfaces(active_plane, neg_mesh);
 
-  DBG_ASSERT(surfs.size() == 2);
+  // DBG_ASSERT(surfs.size() == 2);
 
   // for (auto& s : neg_surfs) {
   //   cout << "NEG SURFACE" << endl;
@@ -238,7 +278,7 @@ hole_position(const Nef_polyhedron& clipped_pos,
 
   //return point(0, 0, 0);
 
-  DBG_ASSERT(false);
+  //DBG_ASSERT(false);
 }
 
 std::pair<Nef_polyhedron, Nef_polyhedron>
