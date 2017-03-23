@@ -201,11 +201,13 @@ hole_position(const Nef_polyhedron& clipped_pos,
   // I am planning for
   DBG_ASSERT(surfs.size() == 2);
 
-  const surface& s = surfs.front();
+  vector<point> locs;
+  for (auto& s : surfs) {
+    triangle t = s.face_triangle(s.front());
+    locs.push_back(t.centroid());
+  }
 
-  triangle t = s.face_triangle(s.front());
-
-  return {t.centroid()};
+  return locs;
 
   // for (auto& s : surfs) {
   //   cout << "POS SURFACE" << endl;
