@@ -185,7 +185,13 @@ std::vector<surface> coplanar_surfaces(const plane p,
   return surfs;
 }
 
-vector<point>
+std::vector<point>
+surface_hole_positions(const surface& s) {
+  triangle t = s.face_triangle(s.front());
+  return {t.centroid()};
+}
+
+std::vector<point>
 hole_position(const Nef_polyhedron& clipped_pos,
 	      const Nef_polyhedron& clipped_neg,
 	      const plane active_plane) {
@@ -197,33 +203,18 @@ hole_position(const Nef_polyhedron& clipped_pos,
 
   vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
 
-  // Assert to check that we are in the limited special case
-  // I am planning for
-  DBG_ASSERT(surfs.size() == 2);
-
   vector<point> locs;
   for (auto& s : surfs) {
-    triangle t = s.face_triangle(s.front());
-    locs.push_back(t.centroid());
+    concat(locs, surface_hole_positions(s));
   }
 
-  return locs;
-
+  // vector<point> locs;
   // for (auto& s : surfs) {
-  //   cout << "POS SURFACE" << endl;
-  //   vtk_debug_highlight_inds(s);
+  //   triangle t = s.face_triangle(s.front());
+  //   locs.push_back(t.centroid());
   // }
-
-  //vtk_debug_highlight_inds(pos_plane_tris, pos_mesh);
-
-  // vector<index_t> neg_plane_tris =
-  //   coplanar_facets(active_plane, neg_mesh);
-
-  // vector<vector<index_t> > neg_inds =
-  //   connect_regions(neg_plane_tris, neg_mesh);
-
-  // vector<surface> neg_surfs =
-  //   inds_to_surfaces(neg_inds, neg_mesh);
+  
+  return locs;
 
   vector<surface> neg_surfs = coplanar_surfaces(active_plane, neg_mesh);
 
@@ -649,6 +640,5 @@ void MainWindow::set_complete_mode() {
   }
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
 }
