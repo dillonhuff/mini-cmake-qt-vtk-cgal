@@ -254,8 +254,16 @@ match_polygons(const point counterbore_dir,
 
   auto inters = polygon_intersection(pos_polys, neg_polys);
 
+  double offset = 0.01;
+  
   vtk_debug_polygons(inters);
-  return {};
+
+  vector<counterbore_params> ps;
+  for (auto& poly : inters) {
+    point pt = centroid(poly.vertices());
+    ps.push_back({counterbore_dir, pt, offset});
+  }
+  return ps;
 }
 
 std::vector<counterbore_params>
