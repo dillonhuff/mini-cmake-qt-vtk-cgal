@@ -185,8 +185,13 @@ std::vector<surface> coplanar_surfaces(const plane p,
   return surfs;
 }
 
-std::vector<point>
-surface_hole_positions(const surface& s) {
+struct counterbore_params {
+  point counter_dir;
+  point position;
+};
+
+std::vector<counterbore_params>
+surface_hole_positions(const point dir, const surface& s) {
   vector<point> centroids;
   for (auto i : s.index_list()) {
     triangle t = s.face_triangle(i);
@@ -197,10 +202,10 @@ surface_hole_positions(const surface& s) {
   point c2 = max_e(centroids, [c1](const point pt) {
       return (c1 - pt).len();
     });
-  return {c1, c2};
+  return {{dir, c1}, {dir, c2}};
 }
 
-Nef_polyhedron
+point
 find_counterbore_side(const Nef_polyhedron& clipped_pos,
 		      const Nef_polyhedron& clipped_neg,
 		      const plane active_plane) {
@@ -223,23 +228,22 @@ find_counterbore_side(const Nef_polyhedron& clipped_pos,
   }
 
   if (max_pos_diam > max_neg_diam) {
-    return clipped_neg;
+    return -1*active_plane.normal();
   }
 
-  return clipped_pos;
+  return active_plane.normal();
   
 }
-  
 
-std::vector<point>
+std::vector<counterbore_params>
 hole_position(const Nef_polyhedron& clipped_pos,
 	      const Nef_polyhedron& clipped_neg,
 	      const plane active_plane) {
-  Nef_polyhedron counterbore_mesh =
+  point counterbore_dir =
     find_counterbore_side(clipped_pos, clipped_neg, active_plane);
 
-  cout << "COUNTERBORE MESH" << endl;
-  vtk_debug_nef(counterbore_mesh);
+  // cout << "COUNTERBORE MESH" << endl;
+  // vtk_debug_nef(counterbore_mesh);
 
   auto pos_meshes = nef_polyhedron_to_trimeshes(clipped_pos);
   //auto neg_mesh = nef_to_single_trimesh(clipped_neg);
@@ -247,13 +251,13 @@ hole_position(const Nef_polyhedron& clipped_pos,
   // Q: How do you merge surfaces? Which surfaces need to
   // be joined by bolts?
 
-  vector<point> locs;
+  vector<counterbore_params> locs;
   
   for (auto& pos_mesh : pos_meshes) {
     vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
 
     for (auto& s : surfs) {
-      concat(locs, surface_hole_positions(s));
+      concat(locs, surface_hole_positions(counterbore_dir, s));
     }
   }
 
@@ -285,15 +289,16 @@ std::pair<Nef_polyhedron, Nef_polyhedron>
 insert_attachment_holes(const Nef_polyhedron& clipped_pos,
 			const Nef_polyhedron& clipped_neg,
 			const plane active_plane) {
-  vector<point> positions = hole_position(clipped_pos, clipped_neg, active_plane);
+  vector<counterbore_params> positions =
+    hole_position(clipped_pos, clipped_neg, active_plane);
 
   //vtk_debug_mesh(hole_mesh);
 
   Nef_polyhedron cp = clipped_pos;
   Nef_polyhedron cn = clipped_neg;
-  for (auto pt : positions) {
+  for (auto cb : positions) {
     triangular_mesh hole_mesh =
-      build_hole_mesh(pt, -1*active_plane.normal(), 10.0, 0.05);
+      build_hole_mesh(cb.position, cb.counter_dir, 10.0, 0.05);
 
     auto hole_nef = trimesh_to_nef_polyhedron(hole_mesh);
     cp = cp - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
@@ -388,7 +393,6 @@ void MainWindow::update_active_mesh(const gca::triangular_mesh& new_mesh) {
     vtkSmartPointer<vtkActor>::New();
   active_mesh_actor->SetMapper(mapper);
 
-  
   renderer->AddActor(active_mesh_actor);
 
   vtk_window->update();
