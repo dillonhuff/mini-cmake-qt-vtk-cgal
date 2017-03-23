@@ -239,16 +239,16 @@ void MainWindow::handle_accept_slice() {
   add_to_queues(neg_split);
   
 
-  bool pos_finished = pos_split.deep_features.size() == 0;
-  bool neg_finished = neg_split.deep_features.size() == 0;
+  // bool pos_finished = pos_split.deep_features.size() == 0;
+  // bool neg_finished = neg_split.deep_features.size() == 0;
 
-  if (!pos_finished) {
-    in_progress.push_back(pos_split);
-  }
+  // if (!pos_finished) {
+  //   in_progress.push_back(pos_split);
+  // }
 
-  if (!neg_finished) {
-    in_progress.push_back(neg_split);
-  }
+  // if (!neg_finished) {
+  //   in_progress.push_back(neg_split);
+  // }
 
   slice_next_part();
 }
