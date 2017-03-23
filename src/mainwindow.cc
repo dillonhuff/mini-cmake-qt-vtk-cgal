@@ -4,6 +4,7 @@
 #include <vtkRenderWindowInteractor.h>
 
 #include "geometry/extrusion.h"
+#include "geometry/triangular_mesh_utils.h"
 #include "geometry/vtk_utils.h"
 #include "geometry/vtk_debug.h"
 #include "process_planning/surface_planning.h"
@@ -247,6 +248,13 @@ find_counterbore_side(const Nef_polyhedron& clipped_pos,
 }
 
 std::vector<counterbore_params>
+match_polygons(const point counterbore_dir,
+	       const std::vector<polygon_3>& pos_polys,
+	       const std::vector<polygon_3>& neg_polys) {
+  return {};
+}
+
+std::vector<counterbore_params>
 hole_position(const Nef_polyhedron& clipped_pos,
 	      const Nef_polyhedron& clipped_neg,
 	      const plane active_plane) {
@@ -262,17 +270,49 @@ hole_position(const Nef_polyhedron& clipped_pos,
   // Q: How do you merge surfaces? Which surfaces need to
   // be joined by bolts?
 
-  vector<counterbore_params> locs;
-  
+  vector<polygon_3> pos_polys;
   for (auto& pos_mesh : pos_meshes) {
     vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
-
     for (auto& s : surfs) {
-      cout << "POSITIVE SURFACE" << endl;
-      vtk_debug_highlight_inds(s);
-      concat(locs, surface_hole_positions(counterbore_dir, s));
+      vector<polygon_3> bound_polys = surface_boundary_polygons(s.index_list(),
+								s.get_parent_mesh());
+      DBG_ASSERT(bound_polys.size() == 1);
+      pos_polys.push_back(bound_polys.front());
     }
   }
+
+  auto neg_meshes = nef_polyhedron_to_trimeshes(clipped_neg);
+
+  vector<polygon_3> neg_polys;
+  for (auto& neg_mesh : neg_meshes) {
+    vector<surface> surfs = coplanar_surfaces(active_plane, neg_mesh);
+    for (auto& s : surfs) {
+      vector<polygon_3> bound_polys = surface_boundary_polygons(s.index_list(),
+								s.get_parent_mesh());
+      DBG_ASSERT(bound_polys.size() == 1);
+      neg_polys.push_back(bound_polys.front());
+    }
+  }
+
+  vtk_debug_polygons(pos_polys);
+  vtk_debug_polygons(neg_polys);
+
+  vector<counterbore_params> locs =
+    match_polygons(counterbore_dir, pos_polys, neg_polys);
+
+  return locs;
+
+  // vector<counterbore_params> locs;
+  
+  // for (auto& pos_mesh : pos_meshes) {
+  //   vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
+
+  //   for (auto& s : surfs) {
+  //     cout << "POSITIVE SURFACE" << endl;
+  //     vtk_debug_highlight_inds(s);
+  //     concat(locs, surface_hole_positions(counterbore_dir, s));
+  //   }
+  // }
 
   // vector<point> locs;
   // for (auto& s : surfs) {
@@ -280,7 +320,7 @@ hole_position(const Nef_polyhedron& clipped_pos,
   //   locs.push_back(t.centroid());
   // }
   
-  return locs;
+  //return locs;
 
   // vector<surface> neg_surfs = coplanar_surfaces(active_plane, neg_mesh);
 
