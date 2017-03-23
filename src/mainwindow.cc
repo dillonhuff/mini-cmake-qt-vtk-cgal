@@ -268,6 +268,8 @@ hole_position(const Nef_polyhedron& clipped_pos,
     vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
 
     for (auto& s : surfs) {
+      cout << "POSITIVE SURFACE" << endl;
+      vtk_debug_highlight_inds(s);
       concat(locs, surface_hole_positions(counterbore_dir, s));
     }
   }
