@@ -193,6 +193,10 @@ struct counterbore_params {
   point counterbore_start() const {
     return position + counterbore_offset*counter_dir;
   }
+
+  point hole_start() const {
+    return position - 5*counter_dir;
+  }
 };
 
 std::vector<counterbore_params>
@@ -303,13 +307,19 @@ insert_attachment_holes(const Nef_polyhedron& clipped_pos,
 
   Nef_polyhedron cp = clipped_pos;
   Nef_polyhedron cn = clipped_neg;
-  for (auto cb : positions) {
-    triangular_mesh hole_mesh =
-      build_hole_mesh(cb.counterbore_start(), cb.counter_dir, 10.0, 0.05);
 
+  double counter_diameter = 0.05;
+  double hole_diameter = counter_diameter * (2.0 / 3.0);
+  for (auto cb : positions) {
+    triangular_mesh counterbore_mesh =
+      build_hole_mesh(cb.counterbore_start(), cb.counter_dir, 10.0, counter_diameter);
+    triangular_mesh hole_mesh =
+      build_hole_mesh(cb.hole_start(), cb.counter_dir, 10.0, hole_diameter);
+
+    auto counterbore_nef = trimesh_to_nef_polyhedron(counterbore_mesh);
     auto hole_nef = trimesh_to_nef_polyhedron(hole_mesh);
-    cp = cp - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
-    cn = cn - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
+    cp = (cp - counterbore_nef) - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
+    cn = (cn - counterbore_nef) - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
   }
 
   vtk_debug_nef(cp);
