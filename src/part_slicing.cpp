@@ -794,7 +794,8 @@ namespace gca {
     cout << "r" << endl;
     cout << r << endl;
 
-    double z_level = as.front().vertices().front().z;
+    polygon_3 rotated_af = apply(r, as.front());
+    double z_level = rotated_af.vertices().front().z;
 
     cout << "intersection z_level = " << z_level << endl;
 
@@ -811,7 +812,16 @@ namespace gca {
 		 const std::vector<polygon_3>& pos_polys,
 		 const std::vector<polygon_3>& neg_polys) {
 
-    auto inters = polygon_intersection_2(pos_polys, neg_polys);
+    vector<polygon_3> pos_polys_inter = pos_polys;
+    vector<polygon_3> neg_polys_inter = neg_polys;
+    for (polygon_3& p : pos_polys_inter) {
+      p.correct_winding_order(counterbore_dir);
+    }
+    for (polygon_3& p : neg_polys_inter) {
+      p.correct_winding_order(counterbore_dir);
+    }
+
+    auto inters = polygon_intersection_2(pos_polys_inter, neg_polys_inter);
 
     double offset = -0.01;
 
