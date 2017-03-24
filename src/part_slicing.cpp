@@ -720,226 +720,265 @@ namespace gca {
     return surfs;
   }
 
-std::vector<counterbore_params>
-surface_hole_positions(const point dir, const surface& s) {
-  vector<point> centroids;
-  for (auto i : s.index_list()) {
-    triangle t = s.face_triangle(i);
-    centroids.push_back(t.centroid());
-  }
-
-  point c1 = centroids.front();
-  point c2 = max_e(centroids, [c1](const point pt) {
-      return (c1 - pt).len();
-    });
-
-  double offset = 0.01;
-  return {{dir, c1, offset}, {dir, c2, offset}};
-}
-
-point
-find_counterbore_side(const Nef_polyhedron& clipped_pos,
-		      const Nef_polyhedron& clipped_neg,
-		      const plane active_plane) {
-  auto pos_meshes = nef_polyhedron_to_trimeshes(clipped_pos);
-  double max_pos_diam = -1;
-  for (auto& pos_mesh : pos_meshes) {
-    double diam = diameter(active_plane.normal(), pos_mesh);
-    if (diam > max_pos_diam) {
-      max_pos_diam = diam;
+  std::vector<counterbore_params>
+  surface_hole_positions(const point dir, const surface& s) {
+    vector<point> centroids;
+    for (auto i : s.index_list()) {
+      triangle t = s.face_triangle(i);
+      centroids.push_back(t.centroid());
     }
+
+    point c1 = centroids.front();
+    point c2 = max_e(centroids, [c1](const point pt) {
+	return (c1 - pt).len();
+      });
+
+    double offset = 0.01;
+    return {{dir, c1, offset}, {dir, c2, offset}};
   }
 
-  auto neg_meshes = nef_polyhedron_to_trimeshes(clipped_neg);
-  double max_neg_diam = -1;
-  for (auto& neg_mesh : neg_meshes) {
-    double diam = diameter(active_plane.normal(), neg_mesh);
-    if (diam > max_neg_diam) {
-      max_neg_diam = diam;
-    }
-  }
-
-  if (max_pos_diam > max_neg_diam) {
-    return -1*active_plane.normal();
-  }
-
-  return active_plane.normal();
-  
-}
-
-std::vector<counterbore_params>
-match_polygons(const point counterbore_dir,
-	       const std::vector<polygon_3>& pos_polys,
-	       const std::vector<polygon_3>& neg_polys) {
-
-  auto inters = polygon_intersection(pos_polys, neg_polys);
-
-  double offset = -0.01;
-
-  vtk_debug_polygons(pos_polys);
-  vtk_debug_polygons(neg_polys);
-  
-  vtk_debug_polygons(inters);
-
-  vector<counterbore_params> ps;
-  for (auto& poly : inters) {
-    point pt = centroid(poly.vertices());
-    ps.push_back({counterbore_dir, pt, offset});
-  }
-  return ps;
-}
-
-std::vector<counterbore_params>
-hole_position(const Nef_polyhedron& clipped_pos,
-	      const Nef_polyhedron& clipped_neg,
-	      const plane active_plane) {
-  point counterbore_dir =
-    find_counterbore_side(clipped_pos, clipped_neg, active_plane);
-
-  // cout << "COUNTERBORE MESH" << endl;
-  // vtk_debug_nef(counterbore_mesh);
-
-  auto pos_meshes = nef_polyhedron_to_trimeshes(clipped_pos);
-  //auto neg_mesh = nef_to_single_trimesh(clipped_neg);
-
-  // Q: How do you merge surfaces? Which surfaces need to
-  // be joined by bolts?
-
-  vector<polygon_3> pos_polys;
-  for (auto& pos_mesh : pos_meshes) {
-    vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
-
-    for (auto& s : surfs) {
-      cout << "POS SURFS" << endl;
-      //vtk_debug_highlight_inds(s);
-
-      vector<polygon_3> bound_polys = surface_boundary_polygons(s.index_list(),
-								s.get_parent_mesh());
-      DBG_ASSERT(bound_polys.size() == 1);
-      pos_polys.push_back(bound_polys.front());
-    }
-  }
-
-  auto neg_meshes = nef_polyhedron_to_trimeshes(clipped_neg);
-
-  vector<polygon_3> neg_polys;
-  for (auto& neg_mesh : neg_meshes) {
-    
-    vector<surface> surfs = coplanar_surfaces(active_plane, neg_mesh);
-    for (auto& s : surfs) {
-      cout << "NEG SURFS" << endl;
-      //vtk_debug_highlight_inds(s);
-      vector<polygon_3> bound_polys = surface_boundary_polygons(s.index_list(),
-								s.get_parent_mesh());
-      DBG_ASSERT(bound_polys.size() == 1);
-      neg_polys.push_back(bound_polys.front());
-    }
-  }
-
-  // vtk_debug_polygons(pos_polys);
-  // vtk_debug_polygons(neg_polys);
-
-  vector<counterbore_params> locs =
-    match_polygons(counterbore_dir, pos_polys, neg_polys);
-
-  return locs;
-
-  // vector<counterbore_params> locs;
-  
-  // for (auto& pos_mesh : pos_meshes) {
-  //   vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
-
-  //   for (auto& s : surfs) {
-  //     cout << "POSITIVE SURFACE" << endl;
-  //     vtk_debug_highlight_inds(s);
-  //     concat(locs, surface_hole_positions(counterbore_dir, s));
-  //   }
-  // }
-
-  // vector<point> locs;
-  // for (auto& s : surfs) {
-  //   triangle t = s.face_triangle(s.front());
-  //   locs.push_back(t.centroid());
-  // }
-  
-  //return locs;
-
-  // vector<surface> neg_surfs = coplanar_surfaces(active_plane, neg_mesh);
-
-  // DBG_ASSERT(surfs.size() == 2);
-
-  // for (auto& s : neg_surfs) {
-  //   cout << "NEG SURFACE" << endl;
-  //   vtk_debug_highlight_inds(s);
-  // }
-  
-  //vtk_debug_highlight_inds(neg_plane_tris, neg_mesh);
-
-  //return point(0, 0, 0);
-
-  //DBG_ASSERT(false);
-}
-
-std::pair<Nef_polyhedron, Nef_polyhedron>
-insert_attachment_holes(const Nef_polyhedron& clipped_pos,
+  point
+  find_counterbore_side(const Nef_polyhedron& clipped_pos,
 			const Nef_polyhedron& clipped_neg,
 			const plane active_plane) {
-  vector<counterbore_params> positions =
-    hole_position(clipped_pos, clipped_neg, active_plane);
+    auto pos_meshes = nef_polyhedron_to_trimeshes(clipped_pos);
+    double max_pos_diam = -1;
+    for (auto& pos_mesh : pos_meshes) {
+      double diam = diameter(active_plane.normal(), pos_mesh);
+      if (diam > max_pos_diam) {
+	max_pos_diam = diam;
+      }
+    }
 
-  //vtk_debug_mesh(hole_mesh);
+    auto neg_meshes = nef_polyhedron_to_trimeshes(clipped_neg);
+    double max_neg_diam = -1;
+    for (auto& neg_mesh : neg_meshes) {
+      double diam = diameter(active_plane.normal(), neg_mesh);
+      if (diam > max_neg_diam) {
+	max_neg_diam = diam;
+      }
+    }
 
-  Nef_polyhedron cp = clipped_pos;
-  Nef_polyhedron cn = clipped_neg;
+    if (max_pos_diam > max_neg_diam) {
+      return -1*active_plane.normal();
+    }
 
-  double counter_diameter = 0.05;
-  double hole_diameter = counter_diameter * (2.0 / 3.0);
-  for (auto cb : positions) {
-    triangular_mesh counterbore_mesh =
-      build_hole_mesh(cb.counterbore_start(), cb.counter_dir, 10.0, counter_diameter);
-    triangular_mesh hole_mesh =
-      build_hole_mesh(cb.hole_start(), cb.counter_dir, 10.0, hole_diameter);
-
-    auto cp_meshes = nef_polyhedron_to_trimeshes(cp);
-    cp_meshes.push_back(counterbore_mesh);
-
-    cout << "Counterbore start = " << cb.counterbore_start() << endl;
-    cout << "Hole position     = " << cb.position << endl;
-    cout << "Counterbore dir   = " << cb.counter_dir << endl;
-    cout << "Counterbore off   = " << cb.counterbore_offset << endl;
-    
-    vtk_debug_meshes(cp_meshes);
-
-    auto cn_meshes = nef_polyhedron_to_trimeshes(cn);
-    cn_meshes.push_back(counterbore_mesh);
-    vtk_debug_meshes(cn_meshes);
-    
-    auto counterbore_nef = trimesh_to_nef_polyhedron(counterbore_mesh);
-    auto hole_nef = trimesh_to_nef_polyhedron(hole_mesh);
-    cp = (cp - counterbore_nef) - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
-    cn = (cn - counterbore_nef) - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
-
+    return active_plane.normal();
+  
   }
 
-  vtk_debug_nef(cp);
-  vtk_debug_nef(cn);
+  vector<polygon_3> from_boost_multipoly_2_2(const boost_multipoly_2& p,
+					     const rotation& r,
+					     const double z_level) {
+    vector<polygon_3> polys;
+    for (auto pl : p) {
+      polygon_3 z_added = to_polygon_3(z_level, pl);
+      cout << "After z addition z = " << z_added.vertices().front().z << endl;
+      polygon_3 z_added_rotated = apply(r, z_added);
+      cout << "After z addition and rotation = " << z_added_rotated.vertices().front().z << endl;
+
+      polys.push_back(z_added_rotated);
+    }
+    return polys;
+  }
   
-  return make_pair(cp, cn);
-}
+  std::vector<polygon_3>
+  polygon_intersection_2(const std::vector<polygon_3>& as,
+			 const std::vector<polygon_3>& bs) {
+    if (as.size() == 0 || bs.size() == 0) { return {}; }
 
-sliced_part cut_part_with_plane(const plane active_plane,
-				const Nef_polyhedron& part_nef) {
-  auto clipped_pos = clip_nef(part_nef, active_plane.slide(0.0001));
-  auto clipped_neg = clip_nef(part_nef, active_plane.flip().slide(0.0001));
+    cout << "Rotation normal = " << as.front().normal() << endl;
+    const rotation r = rotate_from_to(as.front().normal(), point(0, 0, 1));
+    const rotation r_inv = inverse(r);
 
-  auto with_holes = insert_attachment_holes(clipped_pos, clipped_neg, active_plane);
-  auto clipped_nef_pos = with_holes.first;
-  auto clipped_nef_neg = with_holes.second;
+    cout << "r" << endl;
+    cout << r << endl;
 
-  part_split pos_split = build_part_split(clipped_nef_pos);
-  part_split neg_split = build_part_split(clipped_nef_neg);
+    double z_level = as.front().vertices().front().z;
 
-  return sliced_part{pos_split, neg_split};
-}
+    cout << "intersection z_level = " << z_level << endl;
+
+    boost_multipoly_2 ap = to_boost_multipoly_2(r, as);
+    boost_multipoly_2 bp = to_boost_multipoly_2(r, bs);
+    boost_multipoly_2 cp;
+    bg::intersection(ap, bp, cp);
+
+    return from_boost_multipoly_2_2(cp, r_inv, z_level);
+  }
+  
+  std::vector<counterbore_params>
+  match_polygons(const point counterbore_dir,
+		 const std::vector<polygon_3>& pos_polys,
+		 const std::vector<polygon_3>& neg_polys) {
+
+    auto inters = polygon_intersection_2(pos_polys, neg_polys);
+
+    double offset = -0.01;
+
+    vtk_debug_polygons(pos_polys);
+    vtk_debug_polygons(neg_polys);
+  
+    vtk_debug_polygons(inters);
+
+    vector<counterbore_params> ps;
+    for (auto& poly : inters) {
+      point pt = centroid(poly.vertices());
+      ps.push_back({counterbore_dir, pt, offset});
+    }
+    return ps;
+  }
+
+  std::vector<counterbore_params>
+  hole_position(const Nef_polyhedron& clipped_pos,
+		const Nef_polyhedron& clipped_neg,
+		const plane active_plane) {
+    point counterbore_dir =
+      find_counterbore_side(clipped_pos, clipped_neg, active_plane);
+
+    // cout << "COUNTERBORE MESH" << endl;
+    // vtk_debug_nef(counterbore_mesh);
+
+    auto pos_meshes = nef_polyhedron_to_trimeshes(clipped_pos);
+    //auto neg_mesh = nef_to_single_trimesh(clipped_neg);
+
+    // Q: How do you merge surfaces? Which surfaces need to
+    // be joined by bolts?
+
+    vector<polygon_3> pos_polys;
+    for (auto& pos_mesh : pos_meshes) {
+      vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
+
+      for (auto& s : surfs) {
+	cout << "POS SURFS" << endl;
+	//vtk_debug_highlight_inds(s);
+
+	vector<polygon_3> bound_polys = surface_boundary_polygons(s.index_list(),
+								  s.get_parent_mesh());
+	DBG_ASSERT(bound_polys.size() == 1);
+	pos_polys.push_back(bound_polys.front());
+      }
+    }
+
+    auto neg_meshes = nef_polyhedron_to_trimeshes(clipped_neg);
+
+    vector<polygon_3> neg_polys;
+    for (auto& neg_mesh : neg_meshes) {
+    
+      vector<surface> surfs = coplanar_surfaces(active_plane, neg_mesh);
+      for (auto& s : surfs) {
+	cout << "NEG SURFS" << endl;
+	//vtk_debug_highlight_inds(s);
+	vector<polygon_3> bound_polys = surface_boundary_polygons(s.index_list(),
+								  s.get_parent_mesh());
+	DBG_ASSERT(bound_polys.size() == 1);
+	neg_polys.push_back(bound_polys.front());
+      }
+    }
+
+    // vtk_debug_polygons(pos_polys);
+    // vtk_debug_polygons(neg_polys);
+
+    vector<counterbore_params> locs =
+      match_polygons(counterbore_dir, pos_polys, neg_polys);
+
+    return locs;
+
+    // vector<counterbore_params> locs;
+  
+    // for (auto& pos_mesh : pos_meshes) {
+    //   vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
+
+    //   for (auto& s : surfs) {
+    //     cout << "POSITIVE SURFACE" << endl;
+    //     vtk_debug_highlight_inds(s);
+    //     concat(locs, surface_hole_positions(counterbore_dir, s));
+    //   }
+    // }
+
+    // vector<point> locs;
+    // for (auto& s : surfs) {
+    //   triangle t = s.face_triangle(s.front());
+    //   locs.push_back(t.centroid());
+    // }
+  
+    //return locs;
+
+    // vector<surface> neg_surfs = coplanar_surfaces(active_plane, neg_mesh);
+
+    // DBG_ASSERT(surfs.size() == 2);
+
+    // for (auto& s : neg_surfs) {
+    //   cout << "NEG SURFACE" << endl;
+    //   vtk_debug_highlight_inds(s);
+    // }
+  
+    //vtk_debug_highlight_inds(neg_plane_tris, neg_mesh);
+
+    //return point(0, 0, 0);
+
+    //DBG_ASSERT(false);
+  }
+
+  std::pair<Nef_polyhedron, Nef_polyhedron>
+  insert_attachment_holes(const Nef_polyhedron& clipped_pos,
+			  const Nef_polyhedron& clipped_neg,
+			  const plane active_plane) {
+    vector<counterbore_params> positions =
+      hole_position(clipped_pos, clipped_neg, active_plane);
+
+    //vtk_debug_mesh(hole_mesh);
+
+    Nef_polyhedron cp = clipped_pos;
+    Nef_polyhedron cn = clipped_neg;
+
+    double counter_diameter = 0.05;
+    double hole_diameter = counter_diameter * (2.0 / 3.0);
+    for (auto cb : positions) {
+      triangular_mesh counterbore_mesh =
+	build_hole_mesh(cb.counterbore_start(), cb.counter_dir, 10.0, counter_diameter);
+      triangular_mesh hole_mesh =
+	build_hole_mesh(cb.hole_start(), cb.counter_dir, 10.0, hole_diameter);
+
+      auto cp_meshes = nef_polyhedron_to_trimeshes(cp);
+      cp_meshes.push_back(counterbore_mesh);
+
+      cout << "Counterbore start = " << cb.counterbore_start() << endl;
+      cout << "Hole position     = " << cb.position << endl;
+      cout << "Counterbore dir   = " << cb.counter_dir << endl;
+      cout << "Counterbore off   = " << cb.counterbore_offset << endl;
+    
+      vtk_debug_meshes(cp_meshes);
+
+      auto cn_meshes = nef_polyhedron_to_trimeshes(cn);
+      cn_meshes.push_back(counterbore_mesh);
+      vtk_debug_meshes(cn_meshes);
+    
+      auto counterbore_nef = trimesh_to_nef_polyhedron(counterbore_mesh);
+      auto hole_nef = trimesh_to_nef_polyhedron(hole_mesh);
+      cp = (cp - counterbore_nef) - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
+      cn = (cn - counterbore_nef) - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
+
+    }
+
+    vtk_debug_nef(cp);
+    vtk_debug_nef(cn);
+  
+    return make_pair(cp, cn);
+  }
+
+  sliced_part cut_part_with_plane(const plane active_plane,
+				  const Nef_polyhedron& part_nef) {
+    auto clipped_pos = clip_nef(part_nef, active_plane.slide(0.0001));
+    auto clipped_neg = clip_nef(part_nef, active_plane.flip().slide(0.0001));
+
+    auto with_holes = insert_attachment_holes(clipped_pos, clipped_neg, active_plane);
+    auto clipped_nef_pos = with_holes.first;
+    auto clipped_nef_neg = with_holes.second;
+
+    part_split pos_split = build_part_split(clipped_nef_pos);
+    part_split neg_split = build_part_split(clipped_nef_neg);
+
+    return sliced_part{pos_split, neg_split};
+  }
   
 }
