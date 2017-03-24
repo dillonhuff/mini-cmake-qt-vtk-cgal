@@ -77,5 +77,29 @@ namespace gca {
   vtkSmartPointer<vtkActor>
   actor_for_fillet(const triangular_mesh& m,
 		   const std::vector<shared_edge>& edges);
+
+  struct counterbore_params {
+    point counter_dir;
+    point position;
+    double counterbore_offset;
+
+    point counterbore_start() const {
+      return position + counterbore_offset*counter_dir;
+    }
+
+    point hole_start() const {
+      return position - 5*counter_dir;
+    }
+  };
+
+  struct sliced_part {
+    gca::part_split pos_split;
+    gca::part_split neg_split;
+  };
+
   
+  sliced_part cut_part_with_plane(const plane active_plane,
+				  const Nef_polyhedron& part_nef);
+
+  void vtk_debug_nef(const Nef_polyhedron& n);
 }
