@@ -430,7 +430,16 @@ void MainWindow::handle_reject_slice() {
 
 }
 
+std::string to_string(const point pt) {
+  return "(" + std::to_string(pt.x) + ", " + std::to_string(pt.y) + ", " + std::to_string(pt.z) + ")";
+}
+
+std::string to_string(const plane& p) {
+  return "Normal = " + to_string(p.normal()) + "\nPt = " + to_string(p.pt());
+}
+
 void MainWindow::update_active_plane(const gca::plane p) {
+  in_progress_heading->setText(to_string(p).c_str());
   renderer->RemoveActor(active_plane_actor);
   active_plane_actor = plane_actor(vtk_plane(p));
   renderer->AddActor(active_plane_actor);
