@@ -37,7 +37,6 @@ set(IDENTIFIER "com.example.Example")
 set(SOURCE_FILES
     src/main.cc
     src/mainwindow.cc
-    src/part_slicing.cpp
 )
 
 add_project_meta(META_FILES_TO_INCLUDE)
@@ -48,12 +47,19 @@ find_package(Qt5Widgets REQUIRED)
 
 # source_group("UI Files" FILES ${UI_FILES})
 
+add_library(partslice src/part_slicing.cpp)
+target_link_libraries(partslice ${VTK_LIBRARIES} ${CGAL_LIBRARIES} utils backend gprocess geometry gcode gca)
+
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
     ${SOURCE_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 )
-target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES} ${CGAL_LIBRARIES} utils backend gprocess geometry gcode gca)
+target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES} ${CGAL_LIBRARIES} utils backend gprocess geometry gcode gca partslice)
 
 qt5_use_modules(${PROJECT_NAME} Widgets)
+
+add_executable(all-tests test/coplanar_tests.cpp)
+target_link_libraries(all-tests ${VTK_LIBRARIES} ${CGAL_LIBRARIES} utils backend gprocess geometry gcode gca partslice)
+
 
 # Build commands
 # mkdir yet_again_qt_vtk
