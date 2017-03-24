@@ -448,12 +448,12 @@ void MainWindow::add_to_filletables(const part_split& part) {
 }
 
 void MainWindow::add_to_queues(const part_split& part) {
-  if (part.deep_features.size() > 0) {
+  //if (part.deep_features.size() > 0) {
     in_progress.push_back(part);
-    return;
-  }
+    //return;
+    //}
 
-  add_to_filletables(part);
+    //add_to_filletables(part);
 
 }
 

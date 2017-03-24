@@ -341,16 +341,16 @@ namespace gca {
   }
 
   part_split build_part_split(const triangular_mesh& m) {
-    auto fs = check_deep_features(m);
-    return {trimesh_to_nef_polyhedron(m), fs};
+    //auto fs = check_deep_features(m);
+    return {trimesh_to_nef_polyhedron(m), {}}; //fs};
   }
 
   part_split build_part_split(const Nef_polyhedron& m) {
-    vector<feature*> fs;
-    for (auto& m : nef_polyhedron_to_trimeshes(m)) {
-      concat(fs, check_deep_features(m));
-    }
-    return {m, fs};
+    // vector<feature*> fs;
+    // for (auto& m : nef_polyhedron_to_trimeshes(m)) {
+    //   concat(fs, check_deep_features(m));
+    // }
+    return {m, {}}; //fs};
   }
 
   int total_deep_features(const std::vector<part_split>& meshes) {
@@ -770,7 +770,7 @@ match_polygons(const point counterbore_dir,
   auto inters = polygon_intersection(pos_polys, neg_polys);
 
   double offset = 0.01;
-  vtk_debug_polygons(inters);
+  //vtk_debug_polygons(inters);
 
   vector<counterbore_params> ps;
   for (auto& poly : inters) {
@@ -802,7 +802,7 @@ hole_position(const Nef_polyhedron& clipped_pos,
 
     for (auto& s : surfs) {
       cout << "POS SURFS" << endl;
-      vtk_debug_highlight_inds(s);
+      //vtk_debug_highlight_inds(s);
 
       vector<polygon_3> bound_polys = surface_boundary_polygons(s.index_list(),
 								s.get_parent_mesh());
@@ -819,7 +819,7 @@ hole_position(const Nef_polyhedron& clipped_pos,
     vector<surface> surfs = coplanar_surfaces(active_plane, neg_mesh);
     for (auto& s : surfs) {
       cout << "NEG SURFS" << endl;
-      vtk_debug_highlight_inds(s);
+      //vtk_debug_highlight_inds(s);
       vector<polygon_3> bound_polys = surface_boundary_polygons(s.index_list(),
 								s.get_parent_mesh());
       DBG_ASSERT(bound_polys.size() == 1);
@@ -827,8 +827,8 @@ hole_position(const Nef_polyhedron& clipped_pos,
     }
   }
 
-  vtk_debug_polygons(pos_polys);
-  vtk_debug_polygons(neg_polys);
+  //vtk_debug_polygons(pos_polys);
+  //vtk_debug_polygons(neg_polys);
 
   vector<counterbore_params> locs =
     match_polygons(counterbore_dir, pos_polys, neg_polys);
@@ -891,14 +891,23 @@ insert_attachment_holes(const Nef_polyhedron& clipped_pos,
     triangular_mesh hole_mesh =
       build_hole_mesh(cb.hole_start(), cb.counter_dir, 10.0, hole_diameter);
 
+    auto cp_meshes = nef_polyhedron_to_trimeshes(cp);
+    cp_meshes.push_back(counterbore_mesh);
+    vtk_debug_meshes(cp_meshes);
+
+    auto cn_meshes = nef_polyhedron_to_trimeshes(cn);
+    cn_meshes.push_back(counterbore_mesh);
+    vtk_debug_meshes(cn_meshes);
+    
     auto counterbore_nef = trimesh_to_nef_polyhedron(counterbore_mesh);
     auto hole_nef = trimesh_to_nef_polyhedron(hole_mesh);
     cp = (cp - counterbore_nef) - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
     cn = (cn - counterbore_nef) - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
+
   }
 
-  // vtk_debug_nef(cp);
-  // vtk_debug_nef(cn);
+  vtk_debug_nef(cp);
+  vtk_debug_nef(cn);
   
   return make_pair(cp, cn);
 }
