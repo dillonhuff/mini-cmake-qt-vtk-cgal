@@ -823,7 +823,7 @@ namespace gca {
 
     auto inters = polygon_intersection_2(pos_polys_inter, neg_polys_inter);
 
-    double offset = -0.01;
+    double offset = 0.05;
 
     vtk_debug_polygons(pos_polys);
     vtk_debug_polygons(neg_polys);
