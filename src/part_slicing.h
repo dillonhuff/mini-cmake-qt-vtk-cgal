@@ -101,5 +101,10 @@ namespace gca {
   sliced_part cut_part_with_plane(const plane active_plane,
 				  const Nef_polyhedron& part_nef);
 
+  std::vector<surface> coplanar_surfaces(const plane p,
+					 const triangular_mesh& m);
+  
   void vtk_debug_nef(const Nef_polyhedron& n);
+
+  bool is_coplanar(const plane p, const triangle t, const double tol);
 }

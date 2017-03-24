@@ -662,19 +662,41 @@ namespace gca {
     vtk_debug_meshes(nef_polyhedron_to_trimeshes(n));
   }
 
+  bool is_coplanar(const plane p, const triangle t, const double tol) {
+    point pt = t.v1;
+    point diff = pt - p.pt();
+
+    if (within_eps(diff.len(), 0.0, 0.001)) {
+      diff = pt - t.v2;
+    }
+
+    DBG_ASSERT(!within_eps(diff.len(), 0.0, 0.001));
+
+    if (angle_eps(p.normal(), diff, 90.0, tol) &&
+	(angle_eps(normal(t), p.normal(), 0.0, tol) ||
+	 angle_eps(normal(t), p.normal(), 180.0, tol))) {
+      return true;
+    }
+
+    return false;
+  }
+
   std::vector<index_t> coplanar_facets(const plane p,
 				       const triangular_mesh& m) {
     vector<index_t> inds;
     for (auto& i : m.face_indexes()) {
       triangle t = m.face_triangle(i);
-      point pt = t.v1;
-      point diff = pt - p.pt();
-      // NOTE: Tolerances are huge!
-      if (angle_eps(p.normal(), diff, 90.0, 10.0) &&
-	  (angle_eps(normal(t), p.normal(), 0.0, 10.0) ||
-	   angle_eps(normal(t), p.normal(), 180.0, 10.0))) {
+      //point pt = t.v1;
+      //point diff = pt - p.pt();
+      if (is_coplanar(p, t, 2.0)) {
 	inds.push_back(i);
       }
+      // NOTE: Tolerances are huge!
+      // if (angle_eps(p.normal(), diff, 90.0, 2.0) &&
+      // 	  (angle_eps(normal(t), p.normal(), 0.0, 2.0) ||
+      // 	   angle_eps(normal(t), p.normal(), 180.0, 2.0))) {
+      // 	inds.push_back(i);
+      // }
     }
     return inds;
   }
