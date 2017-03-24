@@ -655,6 +655,11 @@ namespace gca {
 				  const double depth,
 				  const double radius) {
     polygon_3 circle = build_3D_circle(center, radius, normal);
+
+    cout << "Centroid        = " << centroid(circle.vertices()) << endl;
+    cout << "Expected center = " << center << endl;
+    vtk_debug_polygons({circle});
+
     return extrude(circle, depth*normal);
   }
 
@@ -769,8 +774,12 @@ match_polygons(const point counterbore_dir,
 
   auto inters = polygon_intersection(pos_polys, neg_polys);
 
-  double offset = 0.01;
-  //vtk_debug_polygons(inters);
+  double offset = -0.01;
+
+  vtk_debug_polygons(pos_polys);
+  vtk_debug_polygons(neg_polys);
+  
+  vtk_debug_polygons(inters);
 
   vector<counterbore_params> ps;
   for (auto& poly : inters) {
@@ -827,8 +836,8 @@ hole_position(const Nef_polyhedron& clipped_pos,
     }
   }
 
-  //vtk_debug_polygons(pos_polys);
-  //vtk_debug_polygons(neg_polys);
+  // vtk_debug_polygons(pos_polys);
+  // vtk_debug_polygons(neg_polys);
 
   vector<counterbore_params> locs =
     match_polygons(counterbore_dir, pos_polys, neg_polys);
@@ -893,6 +902,12 @@ insert_attachment_holes(const Nef_polyhedron& clipped_pos,
 
     auto cp_meshes = nef_polyhedron_to_trimeshes(cp);
     cp_meshes.push_back(counterbore_mesh);
+
+    cout << "Counterbore start = " << cb.counterbore_start() << endl;
+    cout << "Hole position     = " << cb.position << endl;
+    cout << "Counterbore dir   = " << cb.counter_dir << endl;
+    cout << "Counterbore off   = " << cb.counterbore_offset << endl;
+    
     vtk_debug_meshes(cp_meshes);
 
     auto cn_meshes = nef_polyhedron_to_trimeshes(cn);
