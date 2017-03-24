@@ -163,9 +163,10 @@ std::vector<index_t> coplanar_facets(const plane p,
     triangle t = m.face_triangle(i);
     point pt = t.v1;
     point diff = pt - p.pt();
-    if (angle_eps(p.normal(), diff, 90.0, 1.0) &&
-	(angle_eps(normal(t), p.normal(), 0.0, 1.0) ||
-	 angle_eps(normal(t), p.normal(), 180.0, 1.0))) {
+    // NOTE: Tolerances are huge!
+    if (angle_eps(p.normal(), diff, 90.0, 10.0) &&
+	(angle_eps(normal(t), p.normal(), 0.0, 10.0) ||
+	 angle_eps(normal(t), p.normal(), 180.0, 10.0))) {
       inds.push_back(i);
     }
   }
