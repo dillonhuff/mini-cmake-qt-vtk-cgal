@@ -255,7 +255,6 @@ match_polygons(const point counterbore_dir,
   auto inters = polygon_intersection(pos_polys, neg_polys);
 
   double offset = 0.01;
-  
   vtk_debug_polygons(inters);
 
   vector<counterbore_params> ps;
@@ -285,7 +284,11 @@ hole_position(const Nef_polyhedron& clipped_pos,
   vector<polygon_3> pos_polys;
   for (auto& pos_mesh : pos_meshes) {
     vector<surface> surfs = coplanar_surfaces(active_plane, pos_mesh);
+
     for (auto& s : surfs) {
+      cout << "POS SURFS" << endl;
+      vtk_debug_highlight_inds(s);
+
       vector<polygon_3> bound_polys = surface_boundary_polygons(s.index_list(),
 								s.get_parent_mesh());
       DBG_ASSERT(bound_polys.size() == 1);
@@ -299,6 +302,8 @@ hole_position(const Nef_polyhedron& clipped_pos,
   for (auto& neg_mesh : neg_meshes) {
     vector<surface> surfs = coplanar_surfaces(active_plane, neg_mesh);
     for (auto& s : surfs) {
+      cout << "NEG SURFS" << endl;
+      vtk_debug_highlight_inds(s);
       vector<polygon_3> bound_polys = surface_boundary_polygons(s.index_list(),
 								s.get_parent_mesh());
       DBG_ASSERT(bound_polys.size() == 1);
@@ -376,8 +381,8 @@ insert_attachment_holes(const Nef_polyhedron& clipped_pos,
     cn = (cn - counterbore_nef) - hole_nef; //trimesh_to_nef_polyhedron(hole_mesh);
   }
 
-  vtk_debug_nef(cp);
-  vtk_debug_nef(cn);
+  // vtk_debug_nef(cp);
+  // vtk_debug_nef(cn);
   
   return make_pair(cp, cn);
 }
