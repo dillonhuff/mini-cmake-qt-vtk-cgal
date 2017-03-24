@@ -10,3 +10,7 @@ moc_mainwindow.cpp
 ui_mainwindow.h
 cmake/
 *~
+all-tests
+all-tests_automoc.cpp
+libpartslice.a
+partslice_automoc.cpp
